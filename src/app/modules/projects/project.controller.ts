@@ -1,81 +1,96 @@
-// import { StatusCodes } from 'http-status-codes';
-// import catchAsync from '../../utils/catchAsync';
-// import sendResponse from '../../utils/sendResponse';
-// import { projectService } from './project.service';
-// import AppError from '../../error/AppError';
+import { StatusCodes } from 'http-status-codes';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { ProjectServices } from './project.service';
+import { sendImageToCloudinary } from '../../utils/uploadToCloudinary';
 
+const createProject = catchAsync(async (req, res) => {
+  const payload = { ...req.body };
+  if (req.file) {
+    const imageName = `project-thumb-${Date.now()}`;
+    const uploaded: any = await sendImageToCloudinary(imageName, req.file.buffer);
+    payload.thumbnail = uploaded.secure_url;
+  }
+  const result = await ProjectServices.createProjectIntoDB(payload, req.user);
+  sendResponse(res, {
+    statusCode: StatusCodes.CREATED,
+    message: 'Project created successfully',
+    data: result,
+  });
+});
 
-// const createProject = catchAsync(async (req, res) => {
-//   const payload = req.body;
-//   const result = await projectService.createProjectIntoDB(payload);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.CREATED,
-//     message: 'Project created successfully',
-//     data: result,
-//   });
-// });
+const getAllProjects = catchAsync(async (req, res) => {
+  const result = await ProjectServices.getAllProjectsFromDB(req.query, req.user);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Projects retrieved successfully',
+    data: result,
+  });
+});
 
+const getSingleProject = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  const result = await ProjectServices.getSingleProjectFromDB(projectId, req.user);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Project retrieved successfully',
+    data: result,
+  });
+});
 
-// const getAllProjects = catchAsync(async (req, res) => {
-//   const result = await projectService.getAllProjectsFromDB(req.query);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.OK,
-//     message: 'All Projects retrieve successfully',
-//     meta: result?.meta,
-//     data: result?.data,
-//   });
-// });
+const updateProject = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  const payload = { ...req.body };
+  if (req.file) {
+    const imageName = `project-thumb-${projectId}-${Date.now()}`;
+    const uploaded: any = await sendImageToCloudinary(imageName, req.file.buffer);
+    payload.thumbnail = uploaded.secure_url;
+  }
+  const result = await ProjectServices.updateProjectIntoDB(projectId, payload, req.user);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Project updated successfully',
+    data: result,
+  });
+});
 
-// const searchProjects=catchAsync(async(req,res)=>{
-//   const {searchTerm}=req.query;
-//   if(!searchTerm){
-//     throw new AppError(StatusCodes.BAD_REQUEST,"query is required!")
-//   }
-//   const result =await projectService.searchProjectsFromD(searchTerm as string);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.OK,
-//     message: 'Project retrieve successfully',
-//     data: result
-//   });
-// })
+const deleteProject = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  await ProjectServices.deleteProjectFromDB(projectId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Project deleted successfully',
+    data: null,
+  });
+});
 
+const addMember = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  const { memberId } = req.body;
+  const result = await ProjectServices.addMemberToProjectIntoDB(projectId, memberId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Member added to project successfully',
+    data: result,
+  });
+});
 
-// const getSingleProject = catchAsync(async (req, res) => {
-//   const { projectId } = req.params;
-//   const result = await projectService.getSingleProjectFromDB(projectId);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.OK,
-//     message: 'Project retrieve successfully',
-//     data: result,
-//   });
-// });
+const removeMember = catchAsync(async (req, res) => {
+  const { projectId, memberId } = req.params;
+  const result = await ProjectServices.removeMemberFromProjectIntoDB(projectId, memberId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Member removed from project successfully',
+    data: result,
+  });
+});
 
-// const updateProject = catchAsync(async (req, res) => {
-//   const { projectId } = req.params;
-//   const payload = req.body;
-//   const result = await projectService.updateProjectIntoDB(projectId, payload);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.OK,
-//     message: 'Project is updated successfully',
-//     data: result,
-//   });
-// });
-
-// const deleteProject = catchAsync(async (req, res) => {
-//   const { projectId } = req.params;
-//   const result = await projectService.deleteProjectFromDB(projectId);
-//   sendResponse(res, {
-//     statusCode: StatusCodes.OK,
-//     message: 'Project is deleted successfully',
-//     data: result,
-//   });
-// });
-
-// export const projectController = {
-//   createProject,
-//   getAllProjects,
-//   getSingleProject,
-//   updateProject,
-//   deleteProject,
-//   searchProjects
-// };
+export const ProjectControllers = {
+  createProject,
+  getAllProjects,
+  getSingleProject,
+  updateProject,
+  deleteProject,
+  addMember,
+  removeMember,
+};

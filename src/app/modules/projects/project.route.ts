@@ -1,31 +1,57 @@
-// import { Router } from 'express';
-// import { projectController } from './project.controller';
-// import validateRequest from '../../middlewares/validateRequest';
-// import { projectValidation } from './project.validation';
-// import auth from '../../middlewares/auth';
-// import { USER_ROLE } from '../users/user.constant';
+import { Router } from 'express';
+import auth from '../../middlewares/auth';
+import validateRequest from '../../middlewares/validateRequest';
+import { projectValidation } from './project.validation';
+import { ProjectControllers } from './project.controller';
+import { upload } from '../../config/multer.config';
+import { USER_ROLE } from '../users/user.constant';
 
-// const router = Router();
+const router = Router();
 
-// router.post(
-//   '/create-project',
-//   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   validateRequest(projectValidation.createProjectValidationSchema),
-//   projectController.createProject,
-// );
-// router.get('/search/projects', projectController.searchProjects);
-// router.get('/', projectController.getAllProjects);
-// router.get('/:projectId', projectController.getSingleProject);
-// router.patch(
-//   '/:projectId',
-//   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   validateRequest(projectValidation.updateProjectValidationSchema),
-//   projectController.updateProject,
-// );
-// router.delete(
-//   '/:projectId',
-//   auth(USER_ROLE.admin, USER_ROLE.superAdmin),
-//   projectController.deleteProject,
-// );
+router.post(
+  '/',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
+  upload.single('thumbnail'),
+  validateRequest(projectValidation.createProjectValidationSchema),
+  ProjectControllers.createProject,
+);
 
-// export const projectRoutes = router;
+router.get(
+  '/',
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  ProjectControllers.getAllProjects,
+);
+
+router.get(
+  '/:projectId',
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  ProjectControllers.getSingleProject,
+);
+
+router.patch(
+  '/:projectId',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
+  upload.single('thumbnail'),
+  validateRequest(projectValidation.updateProjectValidationSchema),
+  ProjectControllers.updateProject,
+);
+
+router.delete(
+  '/:projectId',
+  auth(USER_ROLE.admin),
+  ProjectControllers.deleteProject,
+);
+
+router.post(
+  '/:projectId/members',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
+  ProjectControllers.addMember,
+);
+
+router.delete(
+  '/:projectId/members/:memberId',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
+  ProjectControllers.removeMember,
+);
+
+export const projectRoutes = router;

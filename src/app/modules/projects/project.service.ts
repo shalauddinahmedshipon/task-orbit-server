@@ -1,179 +1,174 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { StatusCodes } from 'http-status-codes';
-// import AppError from '../../error/AppError';
-// import { TProject } from './project.interface';
-// import { Project } from './project.model';
-// import QueryBuilder from '../../builders/QueryBuilders';
-// import { projectSearchableFields } from './project.constant';
-// import { Category } from '../category/category.model';
-// import { MainCategory } from '../mainCategory/mainCategory.model';
+import { StatusCodes } from 'http-status-codes';
+import AppError from '../../error/AppError';
+import { TProject } from './project.interface';
+import { Project } from './project.model';
+import { JwtPayload } from 'jsonwebtoken';
+import { Task } from '../task/task.model';
+import { Types } from 'mongoose';
 
+const createProjectIntoDB = async (payload: TProject, user: JwtPayload) => {
+  const result = await Project.create({ ...payload, createdBy: user.userId });
+  return result;
+};
 
-// const createProjectIntoDB = async (payload: TProject) => {
-//   const isProjectIsExist = await Project.findOne({
-//     projectName: payload?.projectName,
-//   });
-//   if (isProjectIsExist) {
-//     throw new AppError(StatusCodes.CONFLICT, 'The Project is already exist!');
-//   }
-//   const isMainCategoryExist= await MainCategory.findById(payload.mainCategory);
-//   if (!isMainCategoryExist) {
-//     throw new AppError(StatusCodes.NOT_FOUND, 'The main category does not exist!');
-//   }
-//   const isCategoryExist= await Category.findById(payload.category);
-//   if (!isCategoryExist) {
-//     throw new AppError(StatusCodes.NOT_FOUND, 'The category does not exist!');
-//   }
-//   const result = await Project.create(payload);
-//   return result;
-// };
+const getAllProjectsFromDB = async (
+  query: Record<string, unknown>,
+  user: JwtPayload,
+) => {
+  const filter: Record<string, unknown> = {};
 
+  if (query.status) filter.status = query.status;
+  if (query.client)
+    filter.client = { $regex: query.client as string, $options: 'i' };
 
-// const getAllProjectsFromDB = async (query: Record<string, unknown>) => {
-//   const projectQueryBuilder = new QueryBuilder(Project.find().populate('mainCategory').populate('category'), query)
-//     .search(projectSearchableFields)
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
+  // members only see their own projects
+  if (user.role === 'member') {
+    filter.members = new Types.ObjectId(user.userId);
+  }
 
-//   const data = await projectQueryBuilder.modelQuery;
-//   const meta = await projectQueryBuilder.countTotal();
-//   return { data, meta };
-// };
+  const projects = await Project.find(filter)
+    .populate('members', 'name email avatarUrl department')
+    .populate('createdBy', 'name email')
+    .sort({ createdAt: -1 });
 
-// // search project 
-// const searchProjectsFromD=async(query:string)=>{
-// const results = await Project.aggregate([
-// {
-//   $lookup:{
-//     from:"maincategories",
-//     localField:"mainCategory",
-//     foreignField:"_id",
-//     as:"mainCategoryDetails"
-//   }
-// },
-// {
-//   $unwind:"$mainCategoryDetails"
-// },
-// {
-//   $lookup:{
-//     from:"categories",
-//     localField:"category",
-//     foreignField:"_id",
-//     as:"categoryDetails"
-//   }
-// },
-// {
-//   $unwind:"$categoryDetails"
-// },
+  // attach task quick stats per project
+  const projectIds = projects.map((p) => p._id);
+  const taskStats = await Task.aggregate([
+    { $match: { projectId: { $in: projectIds } } },
+    {
+      $group: {
+        _id: '$projectId',
+        total: { $sum: 1 },
+        completed: {
+          $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] },
+        },
+      },
+    },
+  ]);
 
-// {
-//   $match:{
-//     $or:[
-//       {projectName:{$regex:query,$options:"i"}},
-//       {projectLocation:{$regex:query,$options:"i"}},
-//       {"mainCategoryDetails.name":{$regex:query,$options:"i"}},
-//       {"categoryDetails.name":{$regex:query,$options:"i"}},
-//     ]
-//   }
-// },
+  const statsMap: Record<string, { total: number; completed: number }> = {};
+  taskStats.forEach((s) => {
+    statsMap[s._id.toString()] = { total: s.total, completed: s.completed };
+  });
 
-// {
-//   $project:{
-//     projectName:1,
-//     projectLocation:1,
-//     "mainCategoryDetails.name":1,
-//     "categoryDetails.name":1,
-//     projectImages:1
-//   }
-// }
-// ])
+  const result = projects.map((p) => ({
+    ...p.toObject(),
+    taskStats: statsMap[p._id.toString()] ?? { total: 0, completed: 0 },
+  }));
 
-// return results
-// }
+  return result;
+};
 
-// const getSingleProjectFromDB = async (projectId: string) => {
-//   const result = await Project.findById(projectId).populate('category').populate('mainCategory');
-//   if (!result) {
-//     throw new AppError(StatusCodes.NOT_FOUND, 'The project is not exist!');
-//   }
-//   return result;
-// };
+const getSingleProjectFromDB = async (projectId: string, user: JwtPayload) => {
+  const project = await Project.findById(projectId)
+    .populate('members', 'name email avatarUrl department role')
+    .populate('createdBy', 'name email');
 
+  if (!project) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+  }
 
-// const updateProjectIntoDB = async (projectId: string, payload: any) => {
-//   const { updateImages, newImages, deleteImageIds, updatedFields } = payload;
-  
-//   if (updatedFields && Object.keys(updatedFields).length > 0) {
-//     if(updatedFields.category||updatedFields.mainCategory){
-//       if(!(updatedFields.mainCategory&&updatedFields.category)){
-//         throw new AppError(StatusCodes.BAD_REQUEST,"Main category and category both are required!")
-//       }
-//       const isCategoryAndMainCategoryIsExist=await Category.findOne({_id:updatedFields.category,mainCategory:updatedFields.mainCategory});
-//       if(!isCategoryAndMainCategoryIsExist){
-//         throw new AppError(StatusCodes.BAD_REQUEST,"Main category and category  do not exist! or category does not exist in the main category")
-//       }
-//     }
-//     await Project.findByIdAndUpdate(
-//       projectId,
-//       { $set: updatedFields },
-//       { new: true },
-//     );
-//   }
-//   if (newImages && newImages.length > 0) {
-//     await Project.findByIdAndUpdate(
-//       projectId,
-//       { $push: { projectImages: { $each: newImages } } },
-//       { new: true },
-//     );
-//   }
+  // members can only view projects they belong to
+  if (
+    user.role === 'member' &&
+    !project.members.some((m: any) => m._id.toString() === user.userId)
+  ) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'Access denied');
+  }
 
-//   if (deleteImageIds && deleteImageIds.length > 0) {
-//     await Project.findByIdAndUpdate(
-//       projectId,
-//       { $pull: { projectImages: { _id: { $in: deleteImageIds } } } },
-//       { new: true },
-//     );
-//   }
+  return project;
+};
 
-//   if (updateImages && updateImages.length > 0) {
-//     for (const image of updateImages) {
-//       await Project.findOneAndUpdate(
-//         { _id: projectId, 'projectImages._id': image.imageId },
-//         {
-//           $set: {
-//             'projectImages.$.url': image.url,
-//             'projectImages.$.tag': image.tag,
-//           },
-//         },
-//         { new: true },
-//       );
-//     }
-//   }
+const updateProjectIntoDB = async (
+  projectId: string,
+  payload: Partial<TProject>,
+  user: JwtPayload,
+) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+  }
 
-// const isProjectIsExist = await Project.findById(projectId);
-//   if (!isProjectIsExist){
-//     throw new AppError(StatusCodes.NOT_FOUND, 'The project is not exist!');
-//   }
-//   return isProjectIsExist;
-// };
+  if (
+    user.role === 'manager' &&
+    project.createdBy.toString() !== user.userId
+  ) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Managers can only update their own projects',
+    );
+  }
 
-// const deleteProjectFromDB = async (projectId: string) => {
-//   const isProjectIsExist = await Project.findById(projectId);
-//   if (!isProjectIsExist) {
-//     throw new AppError(StatusCodes.NOT_FOUND, 'The project is not exist!');
-//   }
-//   const result = await Project.findByIdAndDelete(projectId);
-//   return result;
-// };
+  const result = await Project.findByIdAndUpdate(
+    projectId,
+    { $set: payload },
+    { new: true, runValidators: true },
+  )
+    .populate('members', 'name email avatarUrl department')
+    .populate('createdBy', 'name email');
 
+  return result;
+};
 
-// export const projectService = {
-//   createProjectIntoDB,
-//   getAllProjectsFromDB,
-//   getSingleProjectFromDB,
-//   searchProjectsFromD,
-//   updateProjectIntoDB,
-//   deleteProjectFromDB,
-// };
+const deleteProjectFromDB = async (projectId: string) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+  }
+  await Project.findByIdAndDelete(projectId);
+  return null;
+};
+
+const addMemberToProjectIntoDB = async (
+  projectId: string,
+  memberId: string,
+) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+  }
+
+  const memberObjectId = new Types.ObjectId(memberId);
+  if (project.members.some((m) => m.toString() === memberId)) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Member already in this project',
+    );
+  }
+
+  const result = await Project.findByIdAndUpdate(
+    projectId,
+    { $push: { members: memberObjectId } },
+    { new: true },
+  ).populate('members', 'name email avatarUrl department');
+
+  return result;
+};
+
+const removeMemberFromProjectIntoDB = async (
+  projectId: string,
+  memberId: string,
+) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+  }
+
+  const result = await Project.findByIdAndUpdate(
+    projectId,
+    { $pull: { members: new Types.ObjectId(memberId) } },
+    { new: true },
+  ).populate('members', 'name email avatarUrl department');
+
+  return result;
+};
+
+export const ProjectServices = {
+  createProjectIntoDB,
+  getAllProjectsFromDB,
+  getSingleProjectFromDB,
+  updateProjectIntoDB,
+  deleteProjectFromDB,
+  addMemberToProjectIntoDB,
+  removeMemberFromProjectIntoDB,
+};
