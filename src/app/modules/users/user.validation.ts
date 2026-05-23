@@ -19,7 +19,7 @@ const createUserValidationSchema = z.object({
       .optional(),
 
     role: z
-      .enum(['admin', 'manager', 'member'])
+      .enum(['manager', 'member'])
       .optional(),
   }),
 });
@@ -35,7 +35,6 @@ const updateUserByAdminValidationSchema = z.object({
   body: z.object({
     name: z.string().optional(),
 
-    avatarUrl: z.string().optional(),
 
     department: z.string().optional(),
 

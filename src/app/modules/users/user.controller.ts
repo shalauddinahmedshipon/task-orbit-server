@@ -7,7 +7,7 @@ import { sendImageToCloudinary } from '../../utils/uploadToCloudinary';
 const createUser = catchAsync(async (req, res) => {
   const user = req.body;
   const result = await UserServices.createUserIntoDB(user);
-
+  
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     message: 'User created successfully',

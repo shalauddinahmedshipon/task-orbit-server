@@ -36,7 +36,6 @@ const logoutUser = catchAsync(async (req, res) => {
 });
 
 const getMe = catchAsync(async (req, res) => {
-   console.log(req.user);
    const user = await authServices.getMe(req.user.email);
   
 
