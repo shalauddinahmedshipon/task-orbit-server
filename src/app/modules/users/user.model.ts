@@ -28,7 +28,15 @@ const userSchema = new Schema<TUser, UserModel>(
     passwordChangedAt: {
       type: Date,
     },
-    imageUrl: {
+    department: {
+   type: String,
+    },
+
+   skills: {
+   type: [String],
+   default: [],
+    },
+    avatarUrl: {
       type: String,
     },
     status: {
@@ -38,8 +46,8 @@ const userSchema = new Schema<TUser, UserModel>(
     },
     role: {
       type: String,
-      enum: ['superAdmin', 'admin'],
-      default: 'admin',
+      enum: ['admin', 'manager', 'member'],
+      default: 'member',
     },
   },
   {
@@ -48,10 +56,6 @@ const userSchema = new Schema<TUser, UserModel>(
 );
 
 userSchema.pre('save', async function (next) {
-  const isAdminExist = await User.findOne({ role: 'superAdmin' });
-  if (isAdminExist && this.role === 'superAdmin') {
-    throw new AppError(StatusCodes.CONFLICT, 'Super Admin is already Exist!');
-  }
   const isUserExist = await User.findOne({ email: this.email });
   if (isUserExist) {
     throw new AppError(StatusCodes.CONFLICT, 'This User is already Exist!');

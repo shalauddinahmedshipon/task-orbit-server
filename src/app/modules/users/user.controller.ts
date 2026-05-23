@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserServices } from './user.service';
+import { sendImageToCloudinary } from '../../utils/uploadToCloudinary';
 
 const createUser = catchAsync(async (req, res) => {
   const user = req.body;
@@ -34,8 +35,8 @@ const getSingleUser = catchAsync(async (req, res) => {
 });
 
 const getMyProfile = catchAsync(async (req, res) => {
-  const { email, role } = req.user;
-  const result = await UserServices.getMyProfileFromDB(email, role);
+  const { email } = req.user;
+  const result = await UserServices.getMyProfileFromDB(email);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'User own Profile information retrieve successfully',
@@ -43,27 +44,59 @@ const getMyProfile = catchAsync(async (req, res) => {
   });
 });
 
+
 const updateUserProfile = catchAsync(async (req, res) => {
   const userData = req.user;
-  const payload = req.body;
-  const result = await UserServices.updateUserProfileFromDB(payload, userData);
+
+  const payload = {
+    ...req.body,
+  };
+
+  if (req.file) {
+    const imageName = `${userData.email}-${Date.now()}`;
+
+    const uploadedImage: any = await sendImageToCloudinary(
+      imageName,
+      req.file.buffer,
+    );
+
+    payload.avatarUrl = uploadedImage.secure_url;
+  }
+
+  const result = await UserServices.updateUserProfileFromDB(
+    payload,
+    userData,
+  );
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
-    message: 'Update User Profile successfully',
+    message: 'Profile updated successfully',
     data: result,
   });
 });
 
-const changeStatus = catchAsync(async (req, res) => {
-  const { userId, status } = req.body;
-  const payload = req.user;
-  const result = await UserServices.changeStatusFromDB(status, userId, payload);
+
+const updateUserByAdmin = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+
+  const payload = req.body;
+
+  const loggedInUser = req.user;
+
+  const result = await UserServices.updateUserByAdminFromDB(
+    userId,
+    payload,
+    loggedInUser,
+  );
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
-    message: 'Update user status successfully',
+    message: 'User updated successfully',
     data: result,
   });
 });
+
+
 
 const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
@@ -83,5 +116,5 @@ export const UserControllers = {
   updateUserProfile,
   deleteUser,
   getMyProfile,
-  changeStatus,
+  updateUserByAdmin
 };

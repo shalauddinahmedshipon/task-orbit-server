@@ -3,23 +3,23 @@ import { User } from '../modules/users/user.model';
 
 
 
-export const seedSuperAdmin = async () => {
-  const isSuperAdminIsExist = await User.findOne({
-    email: 'admin@email.com',
-    role: 'superAdmin',
+export const seedAdmin = async () => {
+  const isAdminExist = await User.findOne({
+    email: config.admin_email,
+    role: 'admin',
   });
-  if (isSuperAdminIsExist) {
-    console.log('⚠️ super admin already exists. Skipping seeding.');
+
+  if (isAdminExist) {
+    console.log('⚠️ Admin already exists.');
   } else {
-    await User.create(superAdminData);
-    console.log('✅ super admin seeded successfully!');
+    await User.create(adminData);
+    console.log('✅ Admin seeded successfully!');
   }
 };
 
-const superAdminData = {
-  name: 'MD. SHAHIN MIAH',
-  email: `${config.super_admin_email}`,
-  password: `${config.super_admin_password}`,
-  imageUrl: 'https://softypy.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fshahin.6e146ab3.jpeg&w=1920&q=75',
-  role: 'superAdmin',
+const adminData = {
+  name: 'Admin',
+  email: config.admin_email,
+  password: config.admin_password,
+  role: 'admin',
 };

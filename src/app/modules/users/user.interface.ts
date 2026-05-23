@@ -1,17 +1,25 @@
 import { Model } from 'mongoose';
-import { USER_ROLE } from './user.constant';
 
 export type TUser = {
   _id?: string;
   name: string;
   email: string;
   password: string;
+
   needsPasswordChange?: boolean;
   passwordChangedAt?: Date;
-  imageUrl?: string;
+
+  avatarUrl?: string;
+
+  department?: string;
+
+  skills?: string[];
+
   status: 'in-progress' | 'blocked';
-  role: 'superAdmin' | 'admin';
+
+  role: 'admin' | 'manager' | 'member';
 };
+
 
 export interface UserModel extends Model<TUser> {
   isUserExistByEmail(email: string): Promise<TUser>;
@@ -26,4 +34,7 @@ export interface UserModel extends Model<TUser> {
   ): boolean;
 }
 
-export type TUserRole = keyof typeof USER_ROLE;
+export type TUserRole =
+  | 'admin'
+  | 'manager'
+  | 'member';
