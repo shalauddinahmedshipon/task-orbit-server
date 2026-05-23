@@ -29,7 +29,7 @@ const getAllProjectsFromDB = async (
   const projects = await Project.find(filter)
     .populate('members', 'name email avatarUrl department')
     .populate('createdBy', 'name email')
-    .sort({ createdAt: -1 });
+    .sort({ updatedAt: -1 });
 
   // attach task quick stats per project
   const projectIds = projects.map((p) => p._id);

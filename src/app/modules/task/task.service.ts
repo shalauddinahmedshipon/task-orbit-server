@@ -5,7 +5,7 @@ import { Task } from './task.model';
 import { Sprint } from '../sprint/sprint.model';
 import { Project } from '../project/project.model';
 import { JwtPayload } from 'jsonwebtoken';
-import { ActivityLog } from '../activityLog/activityLog.model';
+// import { ActivityLog } from '../activityLog/activityLog.model';
 import { Types } from 'mongoose';
 
 const createTaskIntoDB = async (
@@ -55,11 +55,11 @@ const getAllTasksFromDB = async (query: Record<string, unknown>, user: JwtPayloa
   }
 
   const result = await Task.find(filter)
-    .populate('assignees', 'name email avatarUrl')
+    .populate('assignees', 'name email avatarUrl department')
     .populate('sprintId', 'title sprintNumber')
     .populate('projectId', 'title')
     .populate('createdBy', 'name email')
-    .sort({ createdAt: -1 });
+    .sort({ updatedAt: -1 });
 
   return result;
 };
@@ -77,10 +77,10 @@ const getTasksByProjectFromDB = async (projectId: string, query: Record<string, 
   }
 
   const result = await Task.find(filter)
-    .populate('assignees', 'name email avatarUrl')
+    .populate('assignees', 'name email avatarUrl department')
     .populate('sprintId', 'title sprintNumber')
     .populate('createdBy', 'name email')
-    .sort({ createdAt: -1 });
+    .sort({ updatedAt: -1 });
 
   return result;
 };
@@ -93,9 +93,9 @@ const getTasksBySprintFromDB = async (sprintId: string, user: JwtPayload) => {
   }
 
   const result = await Task.find(filter)
-    .populate('assignees', 'name email avatarUrl')
+    .populate('assignees', 'name email avatarUrl department')
     .populate('createdBy', 'name email')
-    .sort({ priority: -1, createdAt: -1 });
+    .sort({ priority: -1, updatedAt: -1 });
 
   return result;
 };
@@ -105,7 +105,7 @@ const getSingleTaskFromDB = async (taskId: string) => {
     .populate('assignees', 'name email avatarUrl department')
     .populate('sprintId', 'title sprintNumber startDate endDate')
     .populate('projectId', 'title client')
-    .populate('createdBy', 'name email');
+    .populate('createdBy', 'name email role avatarUrl');
 
   if (!task) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
@@ -154,20 +154,20 @@ const updateTaskIntoDB = async (
     { $set: payload },
     { new: true, runValidators: true },
   )
-    .populate('assignees', 'name email avatarUrl')
+    .populate('assignees', 'name email avatarUrl department')
     .populate('sprintId', 'title sprintNumber')
     .populate('projectId', 'title');
 
   // log changes
-  for (const change of changes) {
-    await ActivityLog.create({
-      taskId,
-      userId: user.userId,
-      action: `Updated ${change.field}`,
-      oldValue: change.oldValue,
-      newValue: change.newValue,
-    });
-  }
+//   for (const change of changes) {
+//     await ActivityLog.create({
+//       taskId,
+//       userId: user.userId,
+//       action: `Updated ${change.field}`,
+//       oldValue: change.oldValue,
+//       newValue: change.newValue,
+//     });
+//   }
 
   return result;
 };
@@ -210,15 +210,15 @@ const updateTaskStatusIntoDB = async (
     taskId,
     { $set: { status } },
     { new: true },
-  ).populate('assignees', 'name email avatarUrl');
+  ).populate('assignees', 'name email avatarUrl department');
 
-  await ActivityLog.create({
-    taskId,
-    userId: user.userId,
-    action: 'Changed status',
-    oldValue: oldStatus,
-    newValue: status,
-  });
+//   await ActivityLog.create({
+//     taskId,
+//     userId: user.userId,
+//     action: 'Changed status',
+//     oldValue: oldStatus,
+//     newValue: status,
+//   });
 
   return result;
 };
@@ -252,13 +252,13 @@ const approveTaskIntoDB = async (
     { new: true },
   );
 
-  await ActivityLog.create({
-    taskId,
-    userId: user.userId,
-    action: approved ? 'Approved task' : 'Rejected task (sent back to in-progress)',
-    oldValue: 'review',
-    newValue: newStatus,
-  });
+//   await ActivityLog.create({
+//     taskId,
+//     userId: user.userId,
+//     action: approved ? 'Approved task' : 'Rejected task (sent back to in-progress)',
+//     oldValue: 'review',
+//     newValue: newStatus,
+//   });
 
   return result;
 };
