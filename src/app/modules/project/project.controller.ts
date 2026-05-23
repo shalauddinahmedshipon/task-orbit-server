@@ -64,13 +64,19 @@ const deleteProject = catchAsync(async (req, res) => {
   });
 });
 
-const addMember = catchAsync(async (req, res) => {
+const addMembers = catchAsync(async (req, res) => {
   const { projectId } = req.params;
-  const { memberId } = req.body;
-  const result = await ProjectServices.addMemberToProjectIntoDB(projectId, memberId);
+  const { memberIds } = req.body;
+
+  const result =
+    await ProjectServices.addMembersToProjectIntoDB(
+      projectId,
+      memberIds,
+    );
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
-    message: 'Member added to project successfully',
+    message: 'Members added to project successfully',
     data: result,
   });
 });
@@ -91,6 +97,6 @@ export const ProjectControllers = {
   getSingleProject,
   updateProject,
   deleteProject,
-  addMember,
+  addMembers,
   removeMember,
 };

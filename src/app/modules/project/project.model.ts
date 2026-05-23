@@ -46,8 +46,7 @@ const projectSchema = new Schema<TProject>(
     ],
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+      ref: 'User'
     },
   },
   {

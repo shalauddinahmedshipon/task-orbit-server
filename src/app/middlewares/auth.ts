@@ -23,7 +23,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     } catch (error) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not Authorized!');
     }
-    const { email, role, iat } = decoded;
+    const {userId, email, role, iat } = decoded;
 
     const user = await User.isUserExistByEmail(email);
 

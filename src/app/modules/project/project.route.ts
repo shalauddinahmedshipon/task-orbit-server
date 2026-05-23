@@ -45,7 +45,8 @@ router.delete(
 router.post(
   '/:projectId/members',
   auth(USER_ROLE.admin, USER_ROLE.manager),
-  ProjectControllers.addMember,
+  validateRequest(projectValidation.addMembersValidationSchema),
+  ProjectControllers.addMembers,
 );
 
 router.delete(

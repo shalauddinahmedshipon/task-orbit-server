@@ -21,6 +21,7 @@ const loginUser = async (payload: TLogin) => {
     throw new AppError(StatusCodes.FORBIDDEN, 'Invalid Credential!');
   }
   const jwtPayload = {
+    userId:user._id,
     email: user.email,
     role: user.role,
   };

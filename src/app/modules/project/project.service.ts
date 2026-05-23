@@ -28,7 +28,7 @@ const getAllProjectsFromDB = async (
 
   const projects = await Project.find(filter)
     .populate('members', 'name email avatarUrl department')
-    .populate('createdBy', 'name email')
+    .populate('createdBy', 'name email role avatar')
     .sort({ updatedAt: -1 });
 
   // attach task quick stats per project
@@ -105,7 +105,7 @@ const updateProjectIntoDB = async (
     { new: true, runValidators: true },
   )
     .populate('members', 'name email avatarUrl department')
-    .populate('createdBy', 'name email');
+    .populate('createdBy', 'name email role');
 
   return result;
 };
@@ -119,26 +119,45 @@ const deleteProjectFromDB = async (projectId: string) => {
   return null;
 };
 
-const addMemberToProjectIntoDB = async (
+
+const addMembersToProjectIntoDB = async (
   projectId: string,
-  memberId: string,
+  memberIds: string[],
 ) => {
   const project = await Project.findById(projectId);
+
   if (!project) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
 
-  const memberObjectId = new Types.ObjectId(memberId);
-  if (project.members.some((m) => m.toString() === memberId)) {
+  // existing member ids as string
+  const existingMembers = project.members.map((m) => m.toString());
+
+  // remove already existing members
+  const newMemberIds = memberIds.filter(
+    (id) => !existingMembers.includes(id),
+  );
+
+  if (newMemberIds.length === 0) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      'Member already in this project',
+      'All members already exist in this project',
     );
   }
 
+  const memberObjectIds = newMemberIds.map(
+    (id) => new Types.ObjectId(id),
+  );
+
   const result = await Project.findByIdAndUpdate(
     projectId,
-    { $push: { members: memberObjectId } },
+    {
+      $push: {
+        members: {
+          $each: memberObjectIds,
+        },
+      },
+    },
     { new: true },
   ).populate('members', 'name email avatarUrl department');
 
@@ -169,6 +188,6 @@ export const ProjectServices = {
   getSingleProjectFromDB,
   updateProjectIntoDB,
   deleteProjectFromDB,
-  addMemberToProjectIntoDB,
+  addMembersToProjectIntoDB,
   removeMemberFromProjectIntoDB,
 };
