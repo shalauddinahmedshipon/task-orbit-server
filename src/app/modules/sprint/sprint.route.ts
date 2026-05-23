@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../users/user.constant';
+import { USER_ROLE } from '../user/user.constant';
 import validateRequest from '../../middlewares/validateRequest';
 import { sprintValidation } from './sprint.validation';
 import { SprintControllers } from './sprint.controller';

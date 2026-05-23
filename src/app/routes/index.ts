@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { userRoutes } from '../modules/users/user.routes';
+import { userRoutes } from '../modules/user/user.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
-import { projectRoutes } from '../modules/projects/project.route';
+import { projectRoutes } from '../modules/project/project.route';
 import { sprintRoutes } from '../modules/sprint/sprint.route';
 // import { projectRoutes } from '../modules/projects/project.route';
 

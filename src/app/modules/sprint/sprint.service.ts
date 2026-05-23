@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
 import { TSprint } from './sprint.interface';
 import { Sprint } from './sprint.model';
-import { Project } from '../projects/project.model';
+import { Project } from '../project/project.model';
 
 const createSprintIntoDB = async (
   projectId: string,

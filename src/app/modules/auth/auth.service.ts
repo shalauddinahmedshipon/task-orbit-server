@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
-import { User } from '../users/user.model';
+import { User } from '../user/user.model';
 import { TLogin } from './auth.interface';
 import { createToken } from './auth.utils';
 import config from '../../config';

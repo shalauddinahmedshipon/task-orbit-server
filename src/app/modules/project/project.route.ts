@@ -4,7 +4,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { projectValidation } from './project.validation';
 import { ProjectControllers } from './project.controller';
 import { upload } from '../../config/multer.config';
-import { USER_ROLE } from '../users/user.constant';
+import { USER_ROLE } from '../user/user.constant';
 
 const router = Router();
 

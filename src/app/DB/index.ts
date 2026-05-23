@@ -1,5 +1,5 @@
 import config from '../config';
-import { User } from '../modules/users/user.model';
+import { User } from '../modules/user/user.model';
 
 
 
