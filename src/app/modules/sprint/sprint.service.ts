@@ -4,26 +4,32 @@ import { TSprint } from './sprint.interface';
 import { Sprint } from './sprint.model';
 import { Project } from '../project/project.model';
 
-const createSprintIntoDB = async (
-  projectId: string,
-  payload: Omit<TSprint, 'sprintNumber' | 'projectId'>,
-) => {
+const createSprintIntoDB = async (payload: TSprint) => {
+  const { projectId } = payload;
+
   const project = await Project.findById(projectId);
+
   if (!project) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
 
-  // auto-increment sprint number per project
-  const lastSprint = await Sprint.findOne({ projectId }).sort({ sprintNumber: -1 });
-  const sprintNumber = lastSprint ? lastSprint.sprintNumber + 1 : 1;
+  const lastSprint = await Sprint.findOne({ projectId }).sort({
+    sprintNumber: -1,
+  });
 
-  // default order = last
-  const lastOrder = await Sprint.findOne({ projectId }).sort({ order: -1 });
-  const order = payload.order ?? (lastOrder ? lastOrder.order + 1 : 1);
+  const sprintNumber = lastSprint
+    ? lastSprint.sprintNumber + 1
+    : 1;
+
+  const lastOrder = await Sprint.findOne({ projectId }).sort({
+    order: -1,
+  });
+
+  const order =
+    payload.order ?? (lastOrder ? lastOrder.order + 1 : 1);
 
   const result = await Sprint.create({
     ...payload,
-    projectId,
     sprintNumber,
     order,
   });
@@ -31,13 +37,19 @@ const createSprintIntoDB = async (
   return result;
 };
 
-const getSprintsByProjectFromDB = async (projectId: string) => {
-  const project = await Project.findById(projectId);
-  if (!project) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
+const getAllSprintsFromDB = async (
+  query: Record<string, unknown>,
+) => {
+  const filter: Record<string, unknown> = {};
+
+  if (query.projectId) {
+    filter.projectId = query.projectId;
   }
 
-  const result = await Sprint.find({ projectId }).sort({ order: 1 });
+  const result = await Sprint.find(filter)
+    .populate('projectId', 'title')
+    .sort({ order: 1 });
+
   return result;
 };
 
@@ -64,7 +76,22 @@ const updateSprintIntoDB = async (
     { new: true, runValidators: true },
   );
 
-  return result;
+  if (payload.order) {
+  await Sprint.updateMany(
+    {
+      projectId: sprint.projectId,
+      _id: { $ne: sprintId },
+      order: { $gte: payload.order },
+    },
+    {
+      $inc: { order: 1 },
+    },
+  );
+}
+
+const updatedData=await Sprint.findById(result?._id);
+
+  return updatedData;
 };
 
 const deleteSprintFromDB = async (sprintId: string) => {
@@ -78,7 +105,7 @@ const deleteSprintFromDB = async (sprintId: string) => {
 
 export const SprintServices = {
   createSprintIntoDB,
-  getSprintsByProjectFromDB,
+  getAllSprintsFromDB,
   getSingleSprintFromDB,
   updateSprintIntoDB,
   deleteSprintFromDB,

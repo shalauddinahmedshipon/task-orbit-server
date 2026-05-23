@@ -89,15 +89,15 @@ const updateProjectIntoDB = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
 
-  if (
-    user.role === 'manager' &&
-    project.createdBy.toString() !== user.userId
-  ) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'Managers can only update their own projects',
-    );
-  }
+  // if (
+  //   user.role === 'manager' &&
+  //   project.createdBy.toString() !== user.userId
+  // ) {
+  //   throw new AppError(
+  //     StatusCodes.FORBIDDEN,
+  //     'Managers can only update their own projects',
+  //   );
+  // }
 
   const result = await Project.findByIdAndUpdate(
     projectId,

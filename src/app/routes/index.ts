@@ -25,7 +25,12 @@ const moduleRoutes = [
   {
     path:'/sprints',
     route:sprintRoutes
-  }
+  },
+  {
+    path:'/tasks',
+    route:sprintRoutes
+  },
+
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

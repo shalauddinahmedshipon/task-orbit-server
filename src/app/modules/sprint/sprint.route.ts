@@ -5,7 +5,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { sprintValidation } from './sprint.validation';
 import { SprintControllers } from './sprint.controller';
 
-const router = Router({ mergeParams: true }); // mergeParams for /projects/:projectId/sprints
+const router = Router(); 
 
 router.post(
   '/',
@@ -17,7 +17,7 @@ router.post(
 router.get(
   '/',
   auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
-  SprintControllers.getSprintsByProject,
+  SprintControllers.getAllSprints,
 );
 
 router.get(

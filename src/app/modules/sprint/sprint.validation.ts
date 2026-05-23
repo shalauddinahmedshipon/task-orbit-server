@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const createSprintValidationSchema = z.object({
   body: z.object({
+    projectId: z.string(),
     title: z.string().min(1, 'Title is required'),
     startDate: z.string().refine((d) => !isNaN(Date.parse(d)), {
       message: 'Invalid start date',

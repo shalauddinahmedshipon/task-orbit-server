@@ -4,8 +4,8 @@ import sendResponse from '../../utils/sendResponse';
 import { SprintServices } from './sprint.service';
 
 const createSprint = catchAsync(async (req, res) => {
-  const { projectId } = req.params;
-  const result = await SprintServices.createSprintIntoDB(projectId, req.body);
+  const result = await SprintServices.createSprintIntoDB(req.body);
+
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     message: 'Sprint created successfully',
@@ -13,9 +13,10 @@ const createSprint = catchAsync(async (req, res) => {
   });
 });
 
-const getSprintsByProject = catchAsync(async (req, res) => {
-  const { projectId } = req.params;
-  const result = await SprintServices.getSprintsByProjectFromDB(projectId);
+
+const getAllSprints = catchAsync(async (req, res) => {
+  const result = await SprintServices.getAllSprintsFromDB(req.query);
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Sprints retrieved successfully',
@@ -55,7 +56,7 @@ const deleteSprint = catchAsync(async (req, res) => {
 
 export const SprintControllers = {
   createSprint,
-  getSprintsByProject,
+  getAllSprints,
   getSingleSprint,
   updateSprint,
   deleteSprint,
