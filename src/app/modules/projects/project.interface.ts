@@ -1,19 +1,18 @@
-// import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
-// export type TImage = {
-//   url: string;
-//   tag: string;
-// };
+export type TProjectStatus = 'planned' | 'active' | 'completed' | 'archived';
 
-// export type TProject = {
-//   _id?: string;
-//   projectName: string;
-//   mainCategory:Types.ObjectId;
-//   category:Types.ObjectId;
-//   projectLocation: string;
-//   clientName: string;
-//   year: number;
-//   siteArea: string;
-//   projectDetails: string;
-//   projectImages?: TImage[];
-// };
+export type TProject = {
+  title: string;
+  thumbnail?: string;
+  client: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  budget: number;
+  status: TProjectStatus;
+  members: Types.ObjectId[];
+  createdBy: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
