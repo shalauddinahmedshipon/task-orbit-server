@@ -5,7 +5,7 @@ import { Task } from './task.model';
 import { Sprint } from '../sprint/sprint.model';
 import { Project } from '../project/project.model';
 import { JwtPayload } from 'jsonwebtoken';
-// import { ActivityLog } from '../activityLog/activityLog.model';
+import { ActivityLog } from '../activityLog/activitylog.model';
 import { Types } from 'mongoose';
 import { USER_ROLE } from '../user/user.constant';
 
@@ -124,15 +124,15 @@ const updateTaskIntoDB = async (
 
   
   // log changes
-//   for (const change of changes) {
-//     await ActivityLog.create({
-//       taskId,
-//       userId: user.userId,
-//       action: `Updated ${change.field}`,
-//       oldValue: change.oldValue,
-//       newValue: change.newValue,
-//     });
-//   }
+  for (const change of changes) {
+    await ActivityLog.create({
+      taskId,
+      userId: user.userId,
+      action: `Updated ${change.field}`,
+      oldValue: change.oldValue,
+      newValue: change.newValue,
+    });
+  }
 
   return result
 };
@@ -203,13 +203,13 @@ const updateTaskStatusIntoDB = async (
   await task.save();
 
   // activity log
-  // await ActivityLog.create({
-  //   taskId,
-  //   userId: user.userId,
-  //   action: 'Changed task status',
-  //   oldValue: oldStatus,
-  //   newValue: payload.status || oldStatus,
-  // });
+  await ActivityLog.create({
+    taskId,
+    userId: user.userId,
+    action: 'Changed task status',
+    oldValue: oldStatus,
+    newValue: payload.status || oldStatus,
+  });
 
   return await task.populate([
     {
