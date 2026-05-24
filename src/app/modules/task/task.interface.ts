@@ -4,6 +4,7 @@ export type TTaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
 export type TPriorityStatus = 'low' | 'medium' | 'high';
 
 export type TSubtask = {
+  _id?:Types.ObjectId;
   title: string;
   isComplete: boolean;
 };

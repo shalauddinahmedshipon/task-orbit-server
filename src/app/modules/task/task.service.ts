@@ -1,12 +1,13 @@
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
-import { TTask } from './task.interface';
+import { TTask, TTaskStatus } from './task.interface';
 import { Task } from './task.model';
 import { Sprint } from '../sprint/sprint.model';
 import { Project } from '../project/project.model';
 import { JwtPayload } from 'jsonwebtoken';
 // import { ActivityLog } from '../activityLog/activityLog.model';
 import { Types } from 'mongoose';
+import { USER_ROLE } from '../user/user.constant';
 
 const createTaskIntoDB = async (
   projectId: string,
@@ -64,41 +65,7 @@ const getAllTasksFromDB = async (query: Record<string, unknown>, user: JwtPayloa
   return result;
 };
 
-const getTasksByProjectFromDB = async (projectId: string, query: Record<string, unknown>, user: JwtPayload) => {
-  const filter: Record<string, unknown> = { projectId };
 
-  if (query.sprintId) filter.sprintId = query.sprintId;
-  if (query.status) filter.status = query.status;
-  if (query.priority) filter.priority = query.priority;
-  if (query.assignee) filter.assignees = new Types.ObjectId(query.assignee as string);
-
-  if (user.role === 'member') {
-    filter.assignees = new Types.ObjectId(user.userId);
-  }
-
-  const result = await Task.find(filter)
-    .populate('assignees', 'name email avatarUrl department')
-    .populate('sprintId', 'title sprintNumber')
-    .populate('createdBy', 'name email')
-    .sort({ updatedAt: -1 });
-
-  return result;
-};
-
-const getTasksBySprintFromDB = async (sprintId: string, user: JwtPayload) => {
-  const filter: Record<string, unknown> = { sprintId };
-
-  if (user.role === 'member') {
-    filter.assignees = new Types.ObjectId(user.userId);
-  }
-
-  const result = await Task.find(filter)
-    .populate('assignees', 'name email avatarUrl department')
-    .populate('createdBy', 'name email')
-    .sort({ priority: -1, updatedAt: -1 });
-
-  return result;
-};
 
 const getSingleTaskFromDB = async (taskId: string) => {
   const task = await Task.findById(taskId)
@@ -113,30 +80,36 @@ const getSingleTaskFromDB = async (taskId: string) => {
   return task;
 };
 
+
+
 const updateTaskIntoDB = async (
   taskId: string,
   payload: Partial<TTask>,
   user: JwtPayload,
 ) => {
   const task = await Task.findById(taskId);
+
   if (!task) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
   }
 
-  // members can only update status (not full task details)
-  if (user.role === 'member') {
-    const allowedFields = ['status', 'subtasks'];
-    const attemptedFields = Object.keys(payload);
-    const hasDisallowed = attemptedFields.some((f) => !allowedFields.includes(f));
-    if (hasDisallowed) {
-      throw new AppError(
-        StatusCodes.FORBIDDEN,
-        'Members can only update status and subtasks',
-      );
-    }
+  if (payload.status) {
+    validateTaskStatusTransition(
+      task.status,
+      payload.status,
+      task.reviewApproval,
+      USER_ROLE.manager,
+    );
   }
 
-  // track changed fields for activity log
+
+  const result = await Task.findByIdAndUpdate(
+    taskId,
+    { $set: payload },
+    { new: true, runValidators: true },
+  );
+
+    // track changed fields for activity log
   const changes: { field: string; oldValue: string; newValue: string }[] = [];
   const trackFields = ['status', 'priority', 'assignees'] as const;
   for (const field of trackFields) {
@@ -149,15 +122,7 @@ const updateTaskIntoDB = async (
     }
   }
 
-  const result = await Task.findByIdAndUpdate(
-    taskId,
-    { $set: payload },
-    { new: true, runValidators: true },
-  )
-    .populate('assignees', 'name email avatarUrl department')
-    .populate('sprintId', 'title sprintNumber')
-    .populate('projectId', 'title');
-
+  
   // log changes
 //   for (const change of changes) {
 //     await ActivityLog.create({
@@ -169,58 +134,89 @@ const updateTaskIntoDB = async (
 //     });
 //   }
 
-  return result;
+  return result
 };
+
+
 
 const updateTaskStatusIntoDB = async (
   taskId: string,
-  status: TTask['status'],
+  payload: {
+    status?: TTaskStatus;
+    subtasks?: {
+      _id: string;
+      isComplete: boolean;
+    }[];
+  },
   user: JwtPayload,
 ) => {
   const task = await Task.findById(taskId);
+
   if (!task) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
   }
 
-  // members must be assignees
-  if (
-    user.role === 'member' &&
-    !task.assignees.some((a) => a.toString() === user.userId)
-  ) {
+  // must be assigned
+  const isAssigned = task.assignees.some(
+    (a) => a.toString() === user.userId,
+  );
+
+  if (!isAssigned) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       'You are not assigned to this task',
     );
   }
 
-  // if reviewApproval is required, member can only move to 'review', not 'done'
-  if (
-    task.reviewApproval &&
-    user.role === 'member' &&
-    status === 'done'
-  ) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'This task requires manager approval to move to done',
+  const oldStatus = task.status;
+
+  // validate status transition
+  if (payload.status) {
+    validateTaskStatusTransition(
+      task.status,
+      payload.status,
+      task.reviewApproval,
+      USER_ROLE.member,
     );
+
+    task.status = payload.status;
   }
 
-  const oldStatus = task.status;
-  const result = await Task.findByIdAndUpdate(
-    taskId,
-    { $set: { status } },
-    { new: true },
-  ).populate('assignees', 'name email avatarUrl department');
+  // update subtask completion only
+  if (payload.subtasks?.length) {
+    payload.subtasks.forEach((incomingSubtask) => {
+      const existing = task.subtasks.find(
+        (s) => s._id?.toString() === incomingSubtask._id,
+      );
 
-//   await ActivityLog.create({
-//     taskId,
-//     userId: user.userId,
-//     action: 'Changed status',
-//     oldValue: oldStatus,
-//     newValue: status,
-//   });
+      if (!existing) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Subtask not found',
+        );
+      }
 
-  return result;
+      existing.isComplete = incomingSubtask.isComplete;
+    });
+  }
+
+  await task.save();
+
+  // activity log
+  // await ActivityLog.create({
+  //   taskId,
+  //   userId: user.userId,
+  //   action: 'Changed task status',
+  //   oldValue: oldStatus,
+  //   newValue: payload.status || oldStatus,
+  // });
+
+  return await task.populate([
+    {
+      path: 'assignees',
+      select: 'name email avatarUrl department',
+    },
+  ]);
 };
 
 // Manager approves task from 'review' → 'done'
@@ -308,11 +304,46 @@ const deleteTaskFromDB = async (taskId: string) => {
   return null;
 };
 
+const validateTaskStatusTransition = (
+  currentStatus: TTaskStatus,
+  newStatus: TTaskStatus,
+  reviewApproval: boolean,
+  role: string,
+) => {
+  const transitions: Record<TTaskStatus, TTaskStatus[]> = {
+    todo: ['in-progress'],
+    'in-progress': reviewApproval
+      ? ['review']
+      : ['done'],
+    review: ['done', 'in-progress'],
+    done: [],
+  };
+
+  const allowed = transitions[currentStatus];
+
+  if (!allowed.includes(newStatus)) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `Cannot move task from ${currentStatus} to ${newStatus}`,
+    );
+  }
+
+  // members cannot approve
+  if (
+    role === USER_ROLE.member &&
+    currentStatus === 'review' &&
+    newStatus === 'done'
+  ) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Manager approval required',
+    );
+  }
+};
+
 export const TaskServices = {
   createTaskIntoDB,
   getAllTasksFromDB,
-  getTasksByProjectFromDB,
-  getTasksBySprintFromDB,
   getSingleTaskFromDB,
   updateTaskIntoDB,
   updateTaskStatusIntoDB,

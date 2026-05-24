@@ -15,19 +15,7 @@ router.get(
   TaskControllers.getAllTasks,
 );
 
-// Tasks under a specific project
-router.get(
-  '/project/:projectId',
-  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
-  TaskControllers.getTasksByProject,
-);
 
-// Tasks under a specific sprint
-router.get(
-  '/sprint/:sprintId',
-  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
-  TaskControllers.getTasksBySprint,
-);
 
 // Create task under a project
 router.post(
@@ -44,28 +32,30 @@ router.get(
   TaskControllers.getSingleTask,
 );
 
+
+
+//update task (admin/manager)
 router.patch(
   '/:taskId',
-  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  auth(USER_ROLE.admin, USER_ROLE.manager),
   validateRequest(taskValidation.updateTaskValidationSchema),
   TaskControllers.updateTask,
 );
 
-router.delete(
-  '/:taskId',
-  auth(USER_ROLE.admin, USER_ROLE.manager),
-  TaskControllers.deleteTask,
-);
+
+
+
+
 
 // Status update (separate endpoint — members use this)
 router.patch(
   '/:taskId/status',
-  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  auth( USER_ROLE.member),
   validateRequest(taskValidation.updateTaskStatusValidationSchema),
   TaskControllers.updateTaskStatus,
 );
 
-// Manager approval
+// Manager review task approval 
 router.patch(
   '/:taskId/approve',
   auth(USER_ROLE.admin, USER_ROLE.manager),
@@ -81,8 +71,16 @@ router.post(
   TaskControllers.addAttachment,
 );
 
+
+
 router.delete(
-  '/:taskId/attachments/:publicId',
+  '/:taskId',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
+  TaskControllers.deleteTask,
+);
+
+router.delete(
+  '/:taskId/attachments',
   auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
   TaskControllers.deleteAttachment,
 );

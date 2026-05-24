@@ -3,8 +3,7 @@ import { userRoutes } from '../modules/user/user.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { projectRoutes } from '../modules/project/project.route';
 import { sprintRoutes } from '../modules/sprint/sprint.route';
-// import { projectRoutes } from '../modules/projects/project.route';
-
+import { taskRoutes } from '../modules/task/task.route';
 
 const router = Router();
 
@@ -28,7 +27,7 @@ const moduleRoutes = [
   },
   {
     path:'/tasks',
-    route:sprintRoutes
+    route:taskRoutes
   },
 
 ];

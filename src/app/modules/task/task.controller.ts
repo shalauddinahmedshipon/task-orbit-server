@@ -23,25 +23,6 @@ const getAllTasks = catchAsync(async (req, res) => {
   });
 });
 
-const getTasksByProject = catchAsync(async (req, res) => {
-  const { projectId } = req.params;
-  const result = await TaskServices.getTasksByProjectFromDB(projectId, req.query, req.user);
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    message: 'Project tasks retrieved successfully',
-    data: result,
-  });
-});
-
-const getTasksBySprint = catchAsync(async (req, res) => {
-  const { sprintId } = req.params;
-  const result = await TaskServices.getTasksBySprintFromDB(sprintId, req.user);
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    message: 'Sprint tasks retrieved successfully',
-    data: result,
-  });
-});
 
 const getSingleTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
@@ -65,8 +46,13 @@ const updateTask = catchAsync(async (req, res) => {
 
 const updateTaskStatus = catchAsync(async (req, res) => {
   const { taskId } = req.params;
-  const { status } = req.body;
-  const result = await TaskServices.updateTaskStatusIntoDB(taskId, status, req.user);
+
+  const result = await TaskServices.updateTaskStatusIntoDB(
+    taskId,
+    req.body,
+    req.user,
+  );
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Task status updated successfully',
@@ -101,10 +87,14 @@ const addAttachment = catchAsync(async (req, res) => {
   const type = req.file.mimetype;
   const uploadName = `task-attachment-${taskId}-${Date.now()}`;
 
-  const uploaded: any = await sendImageToCloudinary(uploadName, req.file.buffer);
+  const uploaded: any = await sendImageToCloudinary(uploadName, req.file.buffer, req.file.mimetype);
+
+  const fileUrl = req.file.mimetype === 'application/pdf'
+  ? `${uploaded.secure_url}?inline=true`
+  : uploaded.secure_url;
 
   const attachment = {
-    url: uploaded.secure_url,
+    url: fileUrl,
     publicId: uploaded.public_id,
     type,
     fileName,
@@ -120,7 +110,8 @@ const addAttachment = catchAsync(async (req, res) => {
 });
 
 const deleteAttachment = catchAsync(async (req, res) => {
-  const { taskId, publicId } = req.params;
+  const { taskId} = req.params;
+  const {publicId }=req.body;
   // publicId from URL may have forward slashes encoded as %2F
   const decodedPublicId = decodeURIComponent(publicId);
   const result = await TaskServices.deleteAttachmentFromTaskIntoDB(taskId, decodedPublicId);
@@ -144,8 +135,6 @@ const deleteTask = catchAsync(async (req, res) => {
 export const TaskControllers = {
   createTask,
   getAllTasks,
-  getTasksByProject,
-  getTasksBySprint,
   getSingleTask,
   updateTask,
   updateTaskStatus,
