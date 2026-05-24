@@ -4,7 +4,8 @@ import { authRoutes } from '../modules/auth/auth.routes';
 import { projectRoutes } from '../modules/project/project.route';
 import { sprintRoutes } from '../modules/sprint/sprint.route';
 import { taskRoutes } from '../modules/task/task.route';
-import { activityLogRoutes } from '../modules/activityLog/activityLog.route';
+import { commentRoutes } from '../modules/comment/comment.route';
+import { activityLogRoutes } from '../modules/activityLog/activitylog.route';
 
 const router = Router();
 
@@ -33,6 +34,10 @@ const moduleRoutes = [
   {
     path:'/activity-log',
     route:activityLogRoutes
+  },
+  {
+    path:'/comments',
+    route:commentRoutes
   },
 
 ];
