@@ -6,6 +6,7 @@ import { sprintRoutes } from '../modules/sprint/sprint.route';
 import { taskRoutes } from '../modules/task/task.route';
 import { commentRoutes } from '../modules/comment/comment.route';
 import { activityLogRoutes } from '../modules/activityLog/activitylog.route';
+import { timeLogRoutes } from '../modules/timeLog/timelog.route';
 
 const router = Router();
 
@@ -38,6 +39,10 @@ const moduleRoutes = [
   {
     path:'/comments',
     route:commentRoutes
+  },
+  {
+    path:'/time-log',
+    route:timeLogRoutes
   },
 
 ];
