@@ -14,8 +14,11 @@ const getProjectReport = catchAsync(async (req, res) => {
 });
 
 const getUserReport = catchAsync(async (req, res) => {
-  const userId = req.params.userId || req.user.userId;
-  const result = await ReportServices.getUserReport(userId);
+  // /reports/me  → use token; /reports/user/:userId → use param
+  const userId = req.params.userId ?? req.user.userId;
+  const { projectId } = req.query as { projectId?: string };
+
+  const result = await ReportServices.getUserReportFromDB(userId, projectId);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

@@ -5,7 +5,6 @@ import { User } from '../user/user.model';
 import { TLogin } from './auth.interface';
 import { createToken } from './auth.utils';
 import config from '../../config';
-import { ObjectId } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { JwtPayload } from 'jsonwebtoken';
 

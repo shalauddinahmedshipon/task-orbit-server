@@ -5,22 +5,24 @@ import { USER_ROLE } from '../user/user.constant';
 
 const router = Router();
 
+// Project report — admin/manager only
 router.get(
   '/project/:projectId',
   auth(USER_ROLE.admin, USER_ROLE.manager),
   ReportControllers.getProjectReport,
 );
 
-// Admin/manager can check any user; member checks their own
-router.get(
-  '/user/:userId',
-  auth(USER_ROLE.admin, USER_ROLE.manager),
-  ReportControllers.getUserReport,
-);
 
 router.get(
   '/me',
   auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  ReportControllers.getUserReport,
+);
+
+// Any user's report — admin/manager only; optional ?projectId= filter
+router.get(
+  '/user/:userId',
+  auth(USER_ROLE.admin, USER_ROLE.manager),
   ReportControllers.getUserReport,
 );
 
