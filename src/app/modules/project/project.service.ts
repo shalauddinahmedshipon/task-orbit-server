@@ -59,7 +59,10 @@ const getAllProjectsFromDB = async (
   return result;
 };
 
-const getSingleProjectFromDB = async (projectId: string, user: JwtPayload) => {
+const getSingleProjectFromDB = async (
+  projectId: string,
+  user: JwtPayload,
+) => {
   const project = await Project.findById(projectId)
     .populate('members', 'name email avatarUrl department role')
     .populate('createdBy', 'name email');
@@ -76,7 +79,56 @@ const getSingleProjectFromDB = async (projectId: string, user: JwtPayload) => {
     throw new AppError(StatusCodes.FORBIDDEN, 'Access denied');
   }
 
-  return project;
+  // task stats
+  const [stats] = await Task.aggregate([
+    {
+      $match: {
+        projectId: new Types.ObjectId(projectId),
+      },
+    },
+    {
+      $group: {
+        _id: '$projectId',
+
+        total: { $sum: 1 },
+
+        completed: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'done'] }, 1, 0],
+          },
+        },
+
+        inProgress: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'in-progress'] }, 1, 0],
+          },
+        },
+
+        review: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'review'] }, 1, 0],
+          },
+        },
+
+        todo: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'todo'] }, 1, 0],
+          },
+        },
+      },
+    },
+  ]);
+
+  return {
+    ...project.toObject(),
+    taskStats: stats ?? {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      review: 0,
+      todo: 0,
+    },
+  };
 };
 
 const updateProjectIntoDB = async (
@@ -89,15 +141,7 @@ const updateProjectIntoDB = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
 
-  // if (
-  //   user.role === 'manager' &&
-  //   project.createdBy.toString() !== user.userId
-  // ) {
-  //   throw new AppError(
-  //     StatusCodes.FORBIDDEN,
-  //     'Managers can only update their own projects',
-  //   );
-  // }
+
 
   const result = await Project.findByIdAndUpdate(
     projectId,

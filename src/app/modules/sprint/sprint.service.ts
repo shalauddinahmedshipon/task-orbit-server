@@ -3,6 +3,7 @@ import AppError from '../../error/AppError';
 import { TSprint } from './sprint.interface';
 import { Sprint } from './sprint.model';
 import { Project } from '../project/project.model';
+import { Task } from '../task/task.model';
 
 const createSprintIntoDB = async (payload: TSprint) => {
   const { projectId } = payload;
@@ -37,6 +38,7 @@ const createSprintIntoDB = async (payload: TSprint) => {
   return result;
 };
 
+
 const getAllSprintsFromDB = async (
   query: Record<string, unknown>,
 ) => {
@@ -46,9 +48,73 @@ const getAllSprintsFromDB = async (
     filter.projectId = query.projectId;
   }
 
-  const result = await Sprint.find(filter)
+  const sprints = await Sprint.find(filter)
     .populate('projectId', 'title')
     .sort({ order: 1 });
+
+  const sprintIds = sprints.map((s) => s._id);
+
+  const taskStats = await Task.aggregate([
+    {
+      $match: {
+        sprintId: { $in: sprintIds },
+      },
+    },
+    {
+      $group: {
+        _id: '$sprintId',
+
+        total: { $sum: 1 },
+
+        completed: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'done'] }, 1, 0],
+          },
+        },
+
+        inProgress: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'in-progress'] }, 1, 0],
+          },
+        },
+
+        review: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'review'] }, 1, 0],
+          },
+        },
+
+        todo: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'todo'] }, 1, 0],
+          },
+        },
+      },
+    },
+  ]);
+
+  const statsMap: Record<string, any> = {};
+
+  taskStats.forEach((s) => {
+    statsMap[s._id.toString()] = {
+      total: s.total,
+      completed: s.completed,
+      inProgress: s.inProgress,
+      review: s.review,
+      todo: s.todo,
+    };
+  });
+
+  const result = sprints.map((sprint) => ({
+    ...sprint.toObject(),
+    taskStats: statsMap[sprint._id.toString()] ?? {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      review: 0,
+      todo: 0,
+    },
+  }));
 
   return result;
 };
