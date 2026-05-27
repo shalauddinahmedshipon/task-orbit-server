@@ -8,6 +8,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import { ActivityLog } from '../activityLog/activitylog.model';
 import { Types } from 'mongoose';
 import { USER_ROLE } from '../user/user.constant';
+import { validateTaskStatusTransition } from './task.utils';
 
 const createTaskIntoDB = async (
   projectId: string,
@@ -93,14 +94,14 @@ const updateTaskIntoDB = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
   }
 
-  if (payload.status) {
-    validateTaskStatusTransition(
-      task.status,
-      payload.status,
-      task.reviewApproval,
-      USER_ROLE.manager,
-    );
-  }
+  // if (payload.status) {
+  //   validateTaskStatusTransition(
+  //     task.status,
+  //     payload.status,
+  //     task.reviewApproval,
+  //     USER_ROLE.manager,
+  //   );
+  // }
 
 
   const result = await Task.findByIdAndUpdate(
@@ -248,13 +249,13 @@ const approveTaskIntoDB = async (
     { new: true },
   );
 
-//   await ActivityLog.create({
-//     taskId,
-//     userId: user.userId,
-//     action: approved ? 'Approved task' : 'Rejected task (sent back to in-progress)',
-//     oldValue: 'review',
-//     newValue: newStatus,
-//   });
+  await ActivityLog.create({
+    taskId,
+    userId: user.userId,
+    action: approved ? 'Approved task' : 'Rejected task (sent back to in-progress)',
+    oldValue: 'review',
+    newValue: newStatus,
+  });
 
   return result;
 };
@@ -304,42 +305,6 @@ const deleteTaskFromDB = async (taskId: string) => {
   return null;
 };
 
-const validateTaskStatusTransition = (
-  currentStatus: TTaskStatus,
-  newStatus: TTaskStatus,
-  reviewApproval: boolean,
-  role: string,
-) => {
-  const transitions: Record<TTaskStatus, TTaskStatus[]> = {
-    todo: ['in-progress'],
-    'in-progress': reviewApproval
-      ? ['review']
-      : ['done'],
-    review: ['done', 'in-progress'],
-    done: [],
-  };
-
-  const allowed = transitions[currentStatus];
-
-  if (!allowed.includes(newStatus)) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      `Cannot move task from ${currentStatus} to ${newStatus}`,
-    );
-  }
-
-  // members cannot approve
-  if (
-    role === USER_ROLE.member &&
-    currentStatus === 'review' &&
-    newStatus === 'done'
-  ) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'Manager approval required',
-    );
-  }
-};
 
 export const TaskServices = {
   createTaskIntoDB,

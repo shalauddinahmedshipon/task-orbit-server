@@ -65,7 +65,7 @@ const getSingleProjectFromDB = async (
 ) => {
   const project = await Project.findById(projectId)
     .populate('members', 'name email avatarUrl department role')
-    .populate('createdBy', 'name email');
+    .populate('createdBy', 'name email avatarUrl role');
 
   if (!project) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
