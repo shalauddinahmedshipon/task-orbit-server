@@ -213,15 +213,46 @@ const removeMemberFromProjectIntoDB = async (
   memberId: string,
 ) => {
   const project = await Project.findById(projectId);
+
   if (!project) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
 
+  // prevent removing non-existing member
+  const isMember = project.members.some(
+    (m) => m.toString() === memberId,
+  );
+
+  if (!isMember) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'User is not a project member',
+    );
+  }
+
+  // 1. remove member from project
   const result = await Project.findByIdAndUpdate(
     projectId,
-    { $pull: { members: new Types.ObjectId(memberId) } },
+    {
+      $pull: {
+        members: new Types.ObjectId(memberId),
+      },
+    },
     { new: true },
   ).populate('members', 'name email avatarUrl department');
+
+  // 2. remove member from ALL project tasks
+  await Task.updateMany(
+    {
+      projectId: new Types.ObjectId(projectId),
+      assignees: new Types.ObjectId(memberId),
+    },
+    {
+      $pull: {
+        assignees: new Types.ObjectId(memberId),
+      },
+    },
+  );
 
   return result;
 };

@@ -13,7 +13,7 @@ const createComment = async (
   if (!task) throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
 
   const comment = await Comment.create({ taskId, userId, message });
-  return comment.populate('userId', 'name avatar');
+  return comment.populate('userId', 'name avatarUrl');
 };
 
 const getCommentsByTask = async (taskId: string) => {
@@ -21,7 +21,7 @@ const getCommentsByTask = async (taskId: string) => {
   if (!task) throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
 
   return Comment.find({ taskId })
-    .populate('userId', 'name avatar')
+    .populate('userId', 'name avatarUrl role')
     .sort({ createdAt: 1 });
 };
 
@@ -38,7 +38,7 @@ const updateComment = async (
 
   comment.message = message;
   await comment.save();
-  return comment.populate('userId', 'name avatar');
+  return comment.populate('userId', 'name avatarUrl');
 };
 
 const deleteComment = async (commentId: string, userId: string, role: string) => {

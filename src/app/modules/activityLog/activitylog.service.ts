@@ -13,8 +13,9 @@ export const logActivity = async (payload: {
 
 const getActivityLogsByTask = async (taskId: string) => {
   return ActivityLog.find({ taskId })
-    .populate('userId', 'name avatar role department')
-    .sort({ createdAt: -1 });
+    .populate('userId', 'name avatarUrl role department')
+    .sort({ createdAt: -1 })
+    .limit(25);
 };
 
 export const ActivityLogServices = { getActivityLogsByTask };

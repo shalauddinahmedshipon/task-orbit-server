@@ -17,7 +17,7 @@ const createTimeLog = async (
 
 const getTimeLogsByTask = async (taskId: string) => {
   return TimeLog.find({ taskId })
-    .populate('userId', 'name avatar')
+    .populate('userId', 'name avatarUrl')
     .sort({ logDate: -1 });
 };
 
