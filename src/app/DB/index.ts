@@ -1,8 +1,6 @@
 import config from '../config';
 import { User } from '../modules/user/user.model';
 
-
-
 export const seedAdmin = async () => {
   const isAdminExist = await User.findOne({
     email: config.admin_email,

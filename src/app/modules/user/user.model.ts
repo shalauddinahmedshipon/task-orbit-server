@@ -29,12 +29,12 @@ const userSchema = new Schema<TUser, UserModel>(
       type: Date,
     },
     department: {
-   type: String,
+      type: String,
     },
 
-   skills: {
-   type: [String],
-   default: [],
+    skills: {
+      type: [String],
+      default: [],
     },
     avatarUrl: {
       type: String,

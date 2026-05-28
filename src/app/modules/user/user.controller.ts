@@ -7,7 +7,7 @@ import { sendImageToCloudinary } from '../../utils/uploadToCloudinary';
 const createUser = catchAsync(async (req, res) => {
   const user = req.body;
   const result = await UserServices.createUserIntoDB(user);
-  
+
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     message: 'User created successfully',
@@ -44,7 +44,6 @@ const getMyProfile = catchAsync(async (req, res) => {
   });
 });
 
-
 const updateUserProfile = catchAsync(async (req, res) => {
   const userData = req.user;
 
@@ -63,10 +62,7 @@ const updateUserProfile = catchAsync(async (req, res) => {
     payload.avatarUrl = uploadedImage.secure_url;
   }
 
-  const result = await UserServices.updateUserProfileFromDB(
-    payload,
-    userData,
-  );
+  const result = await UserServices.updateUserProfileFromDB(payload, userData);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -74,7 +70,6 @@ const updateUserProfile = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
 
 const updateUserByAdmin = catchAsync(async (req, res) => {
   const { userId } = req.params;
@@ -96,8 +91,6 @@ const updateUserByAdmin = catchAsync(async (req, res) => {
   });
 });
 
-
-
 const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const result = await UserServices.deleteUserFromDB(userId);
@@ -116,5 +109,5 @@ export const UserControllers = {
   updateUserProfile,
   deleteUser,
   getMyProfile,
-  updateUserByAdmin
+  updateUserByAdmin,
 };

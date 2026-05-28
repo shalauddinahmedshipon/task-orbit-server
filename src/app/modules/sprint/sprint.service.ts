@@ -18,16 +18,13 @@ const createSprintIntoDB = async (payload: TSprint) => {
     sprintNumber: -1,
   });
 
-  const sprintNumber = lastSprint
-    ? lastSprint.sprintNumber + 1
-    : 1;
+  const sprintNumber = lastSprint ? lastSprint.sprintNumber + 1 : 1;
 
   const lastOrder = await Sprint.findOne({ projectId }).sort({
     order: -1,
   });
 
-  const order =
-    payload.order ?? (lastOrder ? lastOrder.order + 1 : 1);
+  const order = payload.order ?? (lastOrder ? lastOrder.order + 1 : 1);
 
   const result = await Sprint.create({
     ...payload,
@@ -38,10 +35,7 @@ const createSprintIntoDB = async (payload: TSprint) => {
   return result;
 };
 
-
-const getAllSprintsFromDB = async (
-  query: Record<string, unknown>,
-) => {
+const getAllSprintsFromDB = async (query: Record<string, unknown>) => {
   const filter: Record<string, unknown> = {};
 
   if (query.projectId) {
@@ -143,19 +137,19 @@ const updateSprintIntoDB = async (
   );
 
   if (payload.order) {
-  await Sprint.updateMany(
-    {
-      projectId: sprint.projectId,
-      _id: { $ne: sprintId },
-      order: { $gte: payload.order },
-    },
-    {
-      $inc: { order: 1 },
-    },
-  );
-}
+    await Sprint.updateMany(
+      {
+        projectId: sprint.projectId,
+        _id: { $ne: sprintId },
+        order: { $gte: payload.order },
+      },
+      {
+        $inc: { order: 1 },
+      },
+    );
+  }
 
-const updatedData=await Sprint.findById(result?._id);
+  const updatedData = await Sprint.findById(result?._id);
 
   return updatedData;
 };

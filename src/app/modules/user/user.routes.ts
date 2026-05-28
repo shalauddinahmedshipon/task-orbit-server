@@ -6,7 +6,6 @@ import auth from '../../middlewares/auth';
 import { USER_ROLE } from './user.constant';
 import { upload } from '../../config/multer.config';
 
-
 const router = Router();
 router.post(
   '/create-user',
@@ -23,25 +22,19 @@ router.get(
 
 router.get(
   '/my-profile',
-  auth(USER_ROLE.admin,
-   USER_ROLE.manager,
-   USER_ROLE.member),
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
   UserControllers.getMyProfile,
 );
 
 router.get(
   '/:userId',
-  auth(USER_ROLE.admin,USER_ROLE.manager),
+  auth(USER_ROLE.admin, USER_ROLE.manager),
   UserControllers.getSingleUser,
 );
 
 router.patch(
   '/update-profile',
-  auth(
-    USER_ROLE.admin,
-    USER_ROLE.manager,
-    USER_ROLE.member,
-  ),
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
   upload.single('avatar'),
   UserControllers.updateUserProfile,
 );
@@ -53,10 +46,6 @@ router.patch(
   UserControllers.updateUserByAdmin,
 );
 
-router.delete(
-  '/:userId',
-  auth(USER_ROLE.admin),
-  UserControllers.deleteUser,
-);
+router.delete('/:userId', auth(USER_ROLE.admin), UserControllers.deleteUser);
 
 export const userRoutes = router;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
 import { User } from '../user/user.model';
@@ -20,7 +19,7 @@ const loginUser = async (payload: TLogin) => {
     throw new AppError(StatusCodes.FORBIDDEN, 'Invalid Credential!');
   }
   const jwtPayload = {
-    userId:user._id,
+    userId: user._id,
     email: user.email,
     role: user.role,
   };
@@ -30,21 +29,19 @@ const loginUser = async (payload: TLogin) => {
     config.access_token_expiresIn as string,
   );
 
+  return {
+    accessToken,
+    needsPasswordChange: user.needsPasswordChange,
 
- return {
-   accessToken,
-   needsPasswordChange: user.needsPasswordChange,
-
-   user: {
+    user: {
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl:user.avatarUrl
-   }
-}
+      avatarUrl: user.avatarUrl,
+    },
+  };
 };
-
 
 const changePasswordIntoDB = async (
   userData: JwtPayload,
@@ -53,34 +50,23 @@ const changePasswordIntoDB = async (
     newPassword: string;
   },
 ) => {
-
   const user = await User.isUserExistByEmail(userData.email);
 
   if (!user) {
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      'User does not exist',
-    );
+    throw new AppError(StatusCodes.NOT_FOUND, 'User does not exist');
   }
 
   if (await User.isUserBlog(user.status)) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      'User is blocked',
-    );
+    throw new AppError(StatusCodes.BAD_REQUEST, 'User is blocked');
   }
 
-  const isOldPasswordMatched =
-    await User.isPasswordMatch(
-      payload.oldPassword,
-      user.password,
-    );
+  const isOldPasswordMatched = await User.isPasswordMatch(
+    payload.oldPassword,
+    user.password,
+  );
 
   if (!isOldPasswordMatched) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'Old password is incorrect',
-    );
+    throw new AppError(StatusCodes.FORBIDDEN, 'Old password is incorrect');
   }
 
   const hashedPassword = await bcrypt.hash(
@@ -102,17 +88,16 @@ const changePasswordIntoDB = async (
   return null;
 };
 
- const getMe=async(email:string)=>{
-     const user = await User.findOne({email});
-     if(!user){
-      throw new AppError(StatusCodes.NOT_FOUND,'User not found!');
-     }
-     return user;
+const getMe = async (email: string) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found!');
   }
+  return user;
+};
 
 export const authServices = {
   loginUser,
   getMe,
-  changePasswordIntoDB
-  
+  changePasswordIntoDB,
 };

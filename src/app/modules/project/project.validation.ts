@@ -18,42 +18,33 @@ const createProjectValidationSchema = z.object({
       message: 'Invalid end date',
     }),
 
-    budget: z.coerce
-      .number()
-      .min(0, 'Budget must be non-negative'),
+    budget: z.coerce.number().min(0, 'Budget must be non-negative'),
 
-    status: z
-      .enum(['planned', 'active', 'completed', 'archived'])
-      .optional(),
+    status: z.enum(['planned', 'active', 'completed', 'archived']).optional(),
 
-   members: z.preprocess(
-  (val) => {
-    // if form-data sends array with single JSON string
-    if (
-      Array.isArray(val) &&
-      val.length === 1 &&
-      typeof val[0] === 'string'
-    ) {
-      return JSON.parse(val[0]);
-    }
+    members: z.preprocess((val) => {
+      // if form-data sends array with single JSON string
+      if (
+        Array.isArray(val) &&
+        val.length === 1 &&
+        typeof val[0] === 'string'
+      ) {
+        return JSON.parse(val[0]);
+      }
 
-    // if direct JSON string
-    if (typeof val === 'string') {
-      return JSON.parse(val);
-    }
+      // if direct JSON string
+      if (typeof val === 'string') {
+        return JSON.parse(val);
+      }
 
-    return val;
-  },
-  z.array(z.string()).optional(),
-),
+      return val;
+    }, z.array(z.string()).optional()),
   }),
 });
 
 const addMembersValidationSchema = z.object({
   body: z.object({
-    memberIds: z
-      .array(z.string())
-      .min(1, 'At least one member is required'),
+    memberIds: z.array(z.string()).min(1, 'At least one member is required'),
   }),
 });
 
@@ -65,10 +56,7 @@ const updateProjectValidationSchema = z.object({
 
     client: z.string().min(1, 'Client is required').optional(),
 
-    description: z
-      .string()
-      .min(1, 'Description is required')
-      .optional(),
+    description: z.string().min(1, 'Description is required').optional(),
 
     startDate: z
       .string()
@@ -84,36 +72,28 @@ const updateProjectValidationSchema = z.object({
       })
       .optional(),
 
-    budget: z.coerce
-      .number()
-      .min(0, 'Budget must be non-negative')
-      .optional(),
+    budget: z.coerce.number().min(0, 'Budget must be non-negative').optional(),
 
-    status: z
-      .enum(['planned', 'active', 'completed', 'archived'])
-      .optional(),
+    status: z.enum(['planned', 'active', 'completed', 'archived']).optional(),
 
     members: z
-      .preprocess(
-        (val) => {
-          // if form-data sends array with single JSON string
-          if (
-            Array.isArray(val) &&
-            val.length === 1 &&
-            typeof val[0] === 'string'
-          ) {
-            return JSON.parse(val[0]);
-          }
+      .preprocess((val) => {
+        // if form-data sends array with single JSON string
+        if (
+          Array.isArray(val) &&
+          val.length === 1 &&
+          typeof val[0] === 'string'
+        ) {
+          return JSON.parse(val[0]);
+        }
 
-          // if direct JSON string
-          if (typeof val === 'string') {
-            return JSON.parse(val);
-          }
+        // if direct JSON string
+        if (typeof val === 'string') {
+          return JSON.parse(val);
+        }
 
-          return val;
-        },
-        z.array(z.string()).optional(),
-      )
+        return val;
+      }, z.array(z.string()).optional())
       .optional(),
   }),
 });
@@ -121,5 +101,5 @@ const updateProjectValidationSchema = z.object({
 export const projectValidation = {
   createProjectValidationSchema,
   updateProjectValidationSchema,
-  addMembersValidationSchema
+  addMembersValidationSchema,
 };

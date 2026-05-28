@@ -9,6 +9,7 @@ import { ActivityLog } from '../activityLog/activitylog.model';
 import { Types } from 'mongoose';
 import { USER_ROLE } from '../user/user.constant';
 import { validateTaskStatusTransition } from './task.utils';
+import { User } from '../user/user.model';
 
 const createTaskIntoDB = async (
   projectId: string,
@@ -42,14 +43,18 @@ const createTaskIntoDB = async (
   return result;
 };
 
-const getAllTasksFromDB = async (query: Record<string, unknown>, user: JwtPayload) => {
+const getAllTasksFromDB = async (
+  query: Record<string, unknown>,
+  user: JwtPayload,
+) => {
   const filter: Record<string, unknown> = {};
 
   if (query.projectId) filter.projectId = query.projectId;
   if (query.sprintId) filter.sprintId = query.sprintId;
   if (query.status) filter.status = query.status;
   if (query.priority) filter.priority = query.priority;
-  if (query.assignee) filter.assignees = new Types.ObjectId(query.assignee as string);
+  if (query.assignee)
+    filter.assignees = new Types.ObjectId(query.assignee as string);
 
   // members only see tasks assigned to them
   if (user.role === 'member') {
@@ -66,8 +71,6 @@ const getAllTasksFromDB = async (query: Record<string, unknown>, user: JwtPayloa
   return result;
 };
 
-
-
 const getSingleTaskFromDB = async (taskId: string) => {
   const task = await Task.findById(taskId)
     .populate('assignees', 'name email avatarUrl department')
@@ -80,8 +83,6 @@ const getSingleTaskFromDB = async (taskId: string) => {
   }
   return task;
 };
-
-
 
 const updateTaskIntoDB = async (
   taskId: string,
@@ -103,27 +104,59 @@ const updateTaskIntoDB = async (
   //   );
   // }
 
-
   const result = await Task.findByIdAndUpdate(
     taskId,
     { $set: payload },
     { new: true, runValidators: true },
   );
 
-    // track changed fields for activity log
-  const changes: { field: string; oldValue: string; newValue: string }[] = [];
+  const changes: {
+    field: string;
+    oldValue: string;
+    newValue: string;
+  }[] = [];
+
   const trackFields = ['status', 'priority', 'assignees'] as const;
+
   for (const field of trackFields) {
     if (payload[field] !== undefined) {
-      const oldVal = JSON.stringify(task[field]);
-      const newVal = JSON.stringify(payload[field]);
+      let oldVal = '';
+      let newVal = '';
+
+      // special handling for assignees
+      if (field === 'assignees') {
+        // old assignee ids
+        const oldIds = task.assignees.map((id) => id.toString());
+
+        // new assignee ids
+        const newIds = (payload.assignees || []).map((id) => id.toString());
+
+        // fetch users
+        const oldUsers = await User.find({
+          _id: { $in: oldIds },
+        }).select('name');
+
+        const newUsers = await User.find({
+          _id: { $in: newIds },
+        }).select('name');
+
+        oldVal = oldUsers.map((u) => u.name).join(', ');
+        newVal = newUsers.map((u) => u.name).join(', ');
+      } else {
+        oldVal = String(task[field]);
+        newVal = String(payload[field]);
+      }
+
       if (oldVal !== newVal) {
-        changes.push({ field, oldValue: oldVal, newValue: newVal });
+        changes.push({
+          field,
+          oldValue: oldVal,
+          newValue: newVal,
+        });
       }
     }
   }
 
-  
   // log changes
   for (const change of changes) {
     await ActivityLog.create({
@@ -135,10 +168,8 @@ const updateTaskIntoDB = async (
     });
   }
 
-  return result
+  return result;
 };
-
-
 
 const updateTaskStatusIntoDB = async (
   taskId: string,
@@ -158,9 +189,7 @@ const updateTaskStatusIntoDB = async (
   }
 
   // must be assigned
-  const isAssigned = task.assignees.some(
-    (a) => a.toString() === user.userId,
-  );
+  const isAssigned = task.assignees.some((a) => a.toString() === user.userId);
 
   if (!isAssigned) {
     throw new AppError(
@@ -191,10 +220,7 @@ const updateTaskStatusIntoDB = async (
       );
 
       if (!existing) {
-        throw new AppError(
-          StatusCodes.BAD_REQUEST,
-          'Subtask not found',
-        );
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Subtask not found');
       }
 
       existing.isComplete = incomingSubtask.isComplete;
@@ -227,7 +253,10 @@ const approveTaskIntoDB = async (
   user: JwtPayload,
 ) => {
   if (user.role === 'member') {
-    throw new AppError(StatusCodes.FORBIDDEN, 'Only managers/admins can approve tasks');
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Only managers/admins can approve tasks',
+    );
   }
 
   const task = await Task.findById(taskId);
@@ -252,7 +281,9 @@ const approveTaskIntoDB = async (
   await ActivityLog.create({
     taskId,
     userId: user.userId,
-    action: approved ? 'Approved task' : 'Rejected task (sent back to in-progress)',
+    action: approved
+      ? 'Approved task'
+      : 'Rejected task (sent back to in-progress)',
     oldValue: 'review',
     newValue: newStatus,
   });
@@ -304,7 +335,6 @@ const deleteTaskFromDB = async (taskId: string) => {
   await Task.findByIdAndDelete(taskId);
   return null;
 };
-
 
 export const TaskServices = {
   createTaskIntoDB,

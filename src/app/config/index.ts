@@ -18,6 +18,6 @@ export default {
   reset_pass_ui_link: process.env.RESET_PASS_UI_LINK,
   smtp_user: process.env.SMTP_USER,
   smtp_pass: process.env.SMTP_PASS,
-  admin_email:process.env.ADMIN_EMAIL,
-  admin_password:process.env.ADMIN_PASSWORD,
+  admin_email: process.env.ADMIN_EMAIL,
+  admin_password: process.env.ADMIN_PASSWORD,
 };

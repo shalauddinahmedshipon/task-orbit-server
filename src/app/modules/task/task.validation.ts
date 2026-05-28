@@ -52,9 +52,7 @@ const updateTaskValidationSchema = z.object({
 
 const updateTaskStatusValidationSchema = z.object({
   body: z.object({
-    status: z
-      .enum(['todo', 'in-progress', 'review', 'done'])
-      .optional(),
+    status: z.enum(['todo', 'in-progress', 'review', 'done']).optional(),
 
     subtasks: z
       .array(
@@ -72,11 +70,6 @@ const approveTaskValidationSchema = z.object({
     approved: z.boolean(),
   }),
 });
-
-
-
-
-
 
 export const taskValidation = {
   createTaskValidationSchema,

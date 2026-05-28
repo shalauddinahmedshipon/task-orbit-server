@@ -1,4 +1,3 @@
-
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -51,7 +50,11 @@ const updateTimeLog = catchAsync(async (req, res) => {
 });
 
 const deleteTimeLog = catchAsync(async (req, res) => {
-  await TimeLogServices.deleteTimeLog(req.params.logId, req.user.userId, req.user.role);
+  await TimeLogServices.deleteTimeLog(
+    req.params.logId,
+    req.user.userId,
+    req.user.role,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

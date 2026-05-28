@@ -12,7 +12,6 @@ router.get(
   ReportControllers.getProjectReport,
 );
 
-
 router.get(
   '/me',
   auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),

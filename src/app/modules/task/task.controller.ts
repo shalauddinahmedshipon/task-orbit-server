@@ -6,7 +6,11 @@ import { sendImageToCloudinary } from '../../utils/uploadToCloudinary';
 
 const createTask = catchAsync(async (req, res) => {
   const { projectId } = req.params;
-  const result = await TaskServices.createTaskIntoDB(projectId, req.body, req.user);
+  const result = await TaskServices.createTaskIntoDB(
+    projectId,
+    req.body,
+    req.user,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     message: 'Task created successfully',
@@ -23,7 +27,6 @@ const getAllTasks = catchAsync(async (req, res) => {
   });
 });
 
-
 const getSingleTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
   const result = await TaskServices.getSingleTaskFromDB(taskId);
@@ -36,7 +39,11 @@ const getSingleTask = catchAsync(async (req, res) => {
 
 const updateTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
-  const result = await TaskServices.updateTaskIntoDB(taskId, req.body, req.user);
+  const result = await TaskServices.updateTaskIntoDB(
+    taskId,
+    req.body,
+    req.user,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Task updated successfully',
@@ -63,7 +70,11 @@ const updateTaskStatus = catchAsync(async (req, res) => {
 const approveTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
   const { approved } = req.body;
-  const result = await TaskServices.approveTaskIntoDB(taskId, approved, req.user);
+  const result = await TaskServices.approveTaskIntoDB(
+    taskId,
+    approved,
+    req.user,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: `Task ${approved ? 'approved' : 'rejected'} successfully`,
@@ -87,11 +98,16 @@ const addAttachment = catchAsync(async (req, res) => {
   const type = req.file.mimetype;
   const uploadName = `task-attachment-${taskId}-${Date.now()}`;
 
-  const uploaded: any = await sendImageToCloudinary(uploadName, req.file.buffer, req.file.mimetype);
+  const uploaded: any = await sendImageToCloudinary(
+    uploadName,
+    req.file.buffer,
+    req.file.mimetype,
+  );
 
-  const fileUrl = req.file.mimetype === 'application/pdf'
-  ? `${uploaded.secure_url}?inline=true`
-  : uploaded.secure_url;
+  const fileUrl =
+    req.file.mimetype === 'application/pdf'
+      ? `${uploaded.secure_url}?inline=true`
+      : uploaded.secure_url;
 
   const attachment = {
     url: fileUrl,
@@ -101,7 +117,10 @@ const addAttachment = catchAsync(async (req, res) => {
     size,
   };
 
-  const result = await TaskServices.addAttachmentToTaskIntoDB(taskId, attachment);
+  const result = await TaskServices.addAttachmentToTaskIntoDB(
+    taskId,
+    attachment,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Attachment added successfully',
@@ -110,11 +129,14 @@ const addAttachment = catchAsync(async (req, res) => {
 });
 
 const deleteAttachment = catchAsync(async (req, res) => {
-  const { taskId} = req.params;
-  const {publicId }=req.body;
+  const { taskId } = req.params;
+  const { publicId } = req.body;
   // publicId from URL may have forward slashes encoded as %2F
   const decodedPublicId = decodeURIComponent(publicId);
-  const result = await TaskServices.deleteAttachmentFromTaskIntoDB(taskId, decodedPublicId);
+  const result = await TaskServices.deleteAttachmentFromTaskIntoDB(
+    taskId,
+    decodedPublicId,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Attachment deleted successfully',

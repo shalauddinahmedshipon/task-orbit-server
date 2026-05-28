@@ -7,7 +7,9 @@ export const sendImageToCloudinary = async (
   mimeType?: string, // 👈 add this parameter
 ) => {
   // Determine resource type based on mime type
-  const getResourceType = (mime?: string): 'image' | 'video' | 'raw' | 'auto' => {
+  const getResourceType = (
+    mime?: string,
+  ): 'image' | 'video' | 'raw' | 'auto' => {
     if (!mime) return 'auto';
     if (mime.startsWith('image/')) return 'image';
     if (mime.startsWith('video/')) return 'video';

@@ -13,7 +13,6 @@ const createSprint = catchAsync(async (req, res) => {
   });
 });
 
-
 const getAllSprints = catchAsync(async (req, res) => {
   const result = await SprintServices.getAllSprintsFromDB(req.query);
 

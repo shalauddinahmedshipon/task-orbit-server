@@ -29,10 +29,7 @@ const getProjectReport = async (projectId: string) => {
   };
 };
 
-const getUserReportFromDB = async (
-  userId: string,
-  projectId?: string,
-) => {
+const getUserReportFromDB = async (userId: string, projectId?: string) => {
   const uid = new Types.ObjectId(userId);
 
   const taskFilter: Record<string, unknown> = { assignees: uid };

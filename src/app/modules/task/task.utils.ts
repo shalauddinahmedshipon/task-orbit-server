@@ -1,7 +1,7 @@
-import { StatusCodes } from "http-status-codes";
-import AppError from "../../error/AppError";
-import { TTaskStatus } from "./task.interface";
-import { USER_ROLE } from "../user/user.constant";
+import { StatusCodes } from 'http-status-codes';
+import AppError from '../../error/AppError';
+import { TTaskStatus } from './task.interface';
+import { USER_ROLE } from '../user/user.constant';
 
 export const validateTaskStatusTransition = (
   currentStatus: TTaskStatus,
@@ -11,9 +11,7 @@ export const validateTaskStatusTransition = (
 ) => {
   const transitions: Record<TTaskStatus, TTaskStatus[]> = {
     todo: ['in-progress'],
-    'in-progress': reviewApproval
-      ? ['review']
-      : ['done'],
+    'in-progress': reviewApproval ? ['review'] : ['done'],
     review: ['done', 'in-progress'],
     done: [],
   };
@@ -33,9 +31,6 @@ export const validateTaskStatusTransition = (
     currentStatus === 'review' &&
     newStatus === 'done'
   ) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'Manager approval required',
-    );
+    throw new AppError(StatusCodes.FORBIDDEN, 'Manager approval required');
   }
 };

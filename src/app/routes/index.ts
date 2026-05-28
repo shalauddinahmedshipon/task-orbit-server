@@ -12,7 +12,6 @@ import { reportRoutes } from '../modules/report/report.route';
 const router = Router();
 
 const moduleRoutes = [
-  
   {
     path: '/users',
     route: userRoutes,
@@ -26,30 +25,29 @@ const moduleRoutes = [
     route: projectRoutes,
   },
   {
-    path:'/sprints',
-    route:sprintRoutes
+    path: '/sprints',
+    route: sprintRoutes,
   },
   {
-    path:'/tasks',
-    route:taskRoutes
+    path: '/tasks',
+    route: taskRoutes,
   },
   {
-    path:'/activity-log',
-    route:activityLogRoutes
+    path: '/activity-log',
+    route: activityLogRoutes,
   },
   {
-    path:'/comments',
-    route:commentRoutes
+    path: '/comments',
+    route: commentRoutes,
   },
   {
-    path:'/time-log',
-    route:timeLogRoutes
+    path: '/time-log',
+    route: timeLogRoutes,
   },
   {
-    path:'/reports',
-    route:reportRoutes
+    path: '/reports',
+    route: reportRoutes,
   },
-
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

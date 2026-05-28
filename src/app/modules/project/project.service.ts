@@ -59,10 +59,7 @@ const getAllProjectsFromDB = async (
   return result;
 };
 
-const getSingleProjectFromDB = async (
-  projectId: string,
-  user: JwtPayload,
-) => {
+const getSingleProjectFromDB = async (projectId: string, user: JwtPayload) => {
   const project = await Project.findById(projectId)
     .populate('members', 'name email avatarUrl department role')
     .populate('createdBy', 'name email avatarUrl role');
@@ -134,14 +131,11 @@ const getSingleProjectFromDB = async (
 const updateProjectIntoDB = async (
   projectId: string,
   payload: Partial<TProject>,
-  user: JwtPayload,
 ) => {
   const project = await Project.findById(projectId);
   if (!project) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Project not found');
   }
-
-
 
   const result = await Project.findByIdAndUpdate(
     projectId,
@@ -163,7 +157,6 @@ const deleteProjectFromDB = async (projectId: string) => {
   return null;
 };
 
-
 const addMembersToProjectIntoDB = async (
   projectId: string,
   memberIds: string[],
@@ -178,9 +171,7 @@ const addMembersToProjectIntoDB = async (
   const existingMembers = project.members.map((m) => m.toString());
 
   // remove already existing members
-  const newMemberIds = memberIds.filter(
-    (id) => !existingMembers.includes(id),
-  );
+  const newMemberIds = memberIds.filter((id) => !existingMembers.includes(id));
 
   if (newMemberIds.length === 0) {
     throw new AppError(
@@ -189,9 +180,7 @@ const addMembersToProjectIntoDB = async (
     );
   }
 
-  const memberObjectIds = newMemberIds.map(
-    (id) => new Types.ObjectId(id),
-  );
+  const memberObjectIds = newMemberIds.map((id) => new Types.ObjectId(id));
 
   const result = await Project.findByIdAndUpdate(
     projectId,
@@ -219,15 +208,10 @@ const removeMemberFromProjectIntoDB = async (
   }
 
   // prevent removing non-existing member
-  const isMember = project.members.some(
-    (m) => m.toString() === memberId,
-  );
+  const isMember = project.members.some((m) => m.toString() === memberId);
 
   if (!isMember) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      'User is not a project member',
-    );
+    throw new AppError(StatusCodes.BAD_REQUEST, 'User is not a project member');
   }
 
   // 1. remove member from project

@@ -1,4 +1,3 @@
-
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
 import { Task } from '../task/task.model';
@@ -12,7 +11,12 @@ const createTimeLog = async (
   const task = await Task.findById(taskId);
   if (!task) throw new AppError(StatusCodes.NOT_FOUND, 'Task not found');
 
-  return TimeLog.create({ taskId, userId, ...payload, logDate: new Date(payload.logDate) });
+  return TimeLog.create({
+    taskId,
+    userId,
+    ...payload,
+    logDate: new Date(payload.logDate),
+  });
 };
 
 const getTimeLogsByTask = async (taskId: string) => {
@@ -36,7 +40,10 @@ const updateTimeLog = async (
   if (!log) throw new AppError(StatusCodes.NOT_FOUND, 'Time log not found');
 
   if (log.userId.toString() !== userId)
-    throw new AppError(StatusCodes.FORBIDDEN, 'You can only edit your own logs');
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'You can only edit your own logs',
+    );
 
   Object.assign(log, {
     ...payload,

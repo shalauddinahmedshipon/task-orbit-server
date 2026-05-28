@@ -8,7 +8,10 @@ const createProject = catchAsync(async (req, res) => {
   const payload = { ...req.body };
   if (req.file) {
     const imageName = `project-thumb-${Date.now()}`;
-    const uploaded: any = await sendImageToCloudinary(imageName, req.file.buffer);
+    const uploaded: any = await sendImageToCloudinary(
+      imageName,
+      req.file.buffer,
+    );
     payload.thumbnail = uploaded.secure_url;
   }
   const result = await ProjectServices.createProjectIntoDB(payload, req.user);
@@ -20,7 +23,10 @@ const createProject = catchAsync(async (req, res) => {
 });
 
 const getAllProjects = catchAsync(async (req, res) => {
-  const result = await ProjectServices.getAllProjectsFromDB(req.query, req.user);
+  const result = await ProjectServices.getAllProjectsFromDB(
+    req.query,
+    req.user,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Projects retrieved successfully',
@@ -30,7 +36,10 @@ const getAllProjects = catchAsync(async (req, res) => {
 
 const getSingleProject = catchAsync(async (req, res) => {
   const { projectId } = req.params;
-  const result = await ProjectServices.getSingleProjectFromDB(projectId, req.user);
+  const result = await ProjectServices.getSingleProjectFromDB(
+    projectId,
+    req.user,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Project retrieved successfully',
@@ -43,10 +52,16 @@ const updateProject = catchAsync(async (req, res) => {
   const payload = { ...req.body };
   if (req.file) {
     const imageName = `project-thumb-${projectId}-${Date.now()}`;
-    const uploaded: any = await sendImageToCloudinary(imageName, req.file.buffer);
+    const uploaded: any = await sendImageToCloudinary(
+      imageName,
+      req.file.buffer,
+    );
     payload.thumbnail = uploaded.secure_url;
   }
-  const result = await ProjectServices.updateProjectIntoDB(projectId, payload, req.user);
+  const result = await ProjectServices.updateProjectIntoDB(
+    projectId,
+    payload
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Project updated successfully',
@@ -68,11 +83,10 @@ const addMembers = catchAsync(async (req, res) => {
   const { projectId } = req.params;
   const { memberIds } = req.body;
 
-  const result =
-    await ProjectServices.addMembersToProjectIntoDB(
-      projectId,
-      memberIds,
-    );
+  const result = await ProjectServices.addMembersToProjectIntoDB(
+    projectId,
+    memberIds,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -83,7 +97,10 @@ const addMembers = catchAsync(async (req, res) => {
 
 const removeMember = catchAsync(async (req, res) => {
   const { projectId, memberId } = req.params;
-  const result = await ProjectServices.removeMemberFromProjectIntoDB(projectId, memberId);
+  const result = await ProjectServices.removeMemberFromProjectIntoDB(
+    projectId,
+    memberId,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Member removed from project successfully',

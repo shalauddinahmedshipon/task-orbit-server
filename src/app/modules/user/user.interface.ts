@@ -20,7 +20,6 @@ export type TUser = {
   role: 'admin' | 'manager' | 'member';
 };
 
-
 export interface UserModel extends Model<TUser> {
   isUserExistByEmail(email: string): Promise<TUser>;
   isUserBlog(status: string): Promise<boolean>;
@@ -34,7 +33,4 @@ export interface UserModel extends Model<TUser> {
   ): boolean;
 }
 
-export type TUserRole =
-  | 'admin'
-  | 'manager'
-  | 'member';
+export type TUserRole = 'admin' | 'manager' | 'member';

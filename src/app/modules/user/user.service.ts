@@ -5,7 +5,7 @@ import { User } from './user.model';
 import { JwtPayload } from 'jsonwebtoken';
 
 const createUserIntoDB = async (payload: TUser) => {
-  const result = await User.create({...payload,needsPasswordChange:true});
+  const result = await User.create({ ...payload, needsPasswordChange: true });
   return result;
 };
 
@@ -92,7 +92,6 @@ const updateUserProfileFromDB = async (
   return result;
 };
 
-
 const updateUserByAdminFromDB = async (
   userId: string,
   payload: Partial<TUser>,
@@ -101,28 +100,16 @@ const updateUserByAdminFromDB = async (
   const user = await User.findById(userId);
 
   if (!user) {
-    throw new AppError(
-      StatusCodes.NOT_FOUND,
-      'User does not exist',
-    );
+    throw new AppError(StatusCodes.NOT_FOUND, 'User does not exist');
   }
 
   // nobody can manage admin except admin
-  if (
-    user.role === 'admin' &&
-    loggedInUser.role !== 'admin'
-  ) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      'You cannot manage admin',
-    );
+  if (user.role === 'admin' && loggedInUser.role !== 'admin') {
+    throw new AppError(StatusCodes.FORBIDDEN, 'You cannot manage admin');
   }
 
   // manager cannot assign admin role
-  if (
-    loggedInUser.role === 'manager' &&
-    payload.role === 'admin'
-  ) {
+  if (loggedInUser.role === 'manager' && payload.role === 'admin') {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       'Manager cannot assign admin role',
@@ -130,10 +117,7 @@ const updateUserByAdminFromDB = async (
   }
 
   // manager cannot assign manager role
-  if (
-    loggedInUser.role === 'manager' &&
-    payload.role === 'manager'
-  ) {
+  if (loggedInUser.role === 'manager' && payload.role === 'manager') {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       'Manager cannot assign manager role',
@@ -141,14 +125,8 @@ const updateUserByAdminFromDB = async (
   }
 
   // prevent self blocking
-  if (
-    payload.status === 'blocked' &&
-    loggedInUser.email === user.email
-  ) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      'You cannot block yourself',
-    );
+  if (payload.status === 'blocked' && loggedInUser.email === user.email) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'You cannot block yourself');
   }
 
   const result = await User.findByIdAndUpdate(
@@ -165,13 +143,12 @@ const updateUserByAdminFromDB = async (
   return result;
 };
 
-
 const deleteUserFromDB = async (userId: string) => {
   const isUserExist = await User.findById(userId);
   if (!isUserExist) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User does not Exist');
   }
-  if(isUserExist.role==="admin"){
+  if (isUserExist.role === 'admin') {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Admin can not be deleted!');
   }
   const result = await User.findByIdAndDelete(userId);
@@ -186,5 +163,5 @@ export const UserServices = {
   deleteUserFromDB,
   getMyProfileFromDB,
   changeStatusFromDB,
-  updateUserByAdminFromDB
+  updateUserByAdminFromDB,
 };

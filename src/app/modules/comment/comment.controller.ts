@@ -1,4 +1,3 @@
-
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -34,7 +33,11 @@ const updateComment = catchAsync(async (req, res) => {
   const userId = req.user.userId;
   const { message } = req.body;
 
-  const result = await CommentServices.updateComment(commentId, userId, message);
+  const result = await CommentServices.updateComment(
+    commentId,
+    userId,
+    message,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

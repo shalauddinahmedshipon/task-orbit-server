@@ -1,4 +1,3 @@
-
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../error/AppError';
 import { Task } from '../task/task.model';
@@ -34,14 +33,21 @@ const updateComment = async (
   if (!comment) throw new AppError(StatusCodes.NOT_FOUND, 'Comment not found');
 
   if (comment.userId.toString() !== userId)
-    throw new AppError(StatusCodes.FORBIDDEN, 'You can only edit your own comments');
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'You can only edit your own comments',
+    );
 
   comment.message = message;
   await comment.save();
   return comment.populate('userId', 'name avatarUrl');
 };
 
-const deleteComment = async (commentId: string, userId: string, role: string) => {
+const deleteComment = async (
+  commentId: string,
+  userId: string,
+  role: string,
+) => {
   const comment = await Comment.findById(commentId);
   if (!comment) throw new AppError(StatusCodes.NOT_FOUND, 'Comment not found');
 
@@ -49,7 +55,10 @@ const deleteComment = async (commentId: string, userId: string, role: string) =>
   const isAdminOrManager = role === 'admin' || role === 'manager';
 
   if (!isOwner && !isAdminOrManager)
-    throw new AppError(StatusCodes.FORBIDDEN, 'Not authorized to delete this comment');
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Not authorized to delete this comment',
+    );
 
   await Comment.findByIdAndDelete(commentId);
   return null;

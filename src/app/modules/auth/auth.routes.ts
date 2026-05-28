@@ -15,26 +15,17 @@ router.post(
 
 router.post('/logout', authControllers.logoutUser);
 
-router.get('/get-me',
-    auth(
-    USER_ROLE.admin,
-    USER_ROLE.manager,
-    USER_ROLE.member,
-  ),
-  authControllers.getMe);
+router.get(
+  '/get-me',
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  authControllers.getMe,
+);
 
 router.patch(
   '/change-password',
-  auth(
-    USER_ROLE.admin,
-    USER_ROLE.manager,
-    USER_ROLE.member,
-  ),
-  validateRequest(
-    AuthValidation.changePasswordValidationSchema,
-  ),
+  auth(USER_ROLE.admin, USER_ROLE.manager, USER_ROLE.member),
+  validateRequest(AuthValidation.changePasswordValidationSchema),
   authControllers.changePassword,
 );
-
 
 export const authRoutes = router;

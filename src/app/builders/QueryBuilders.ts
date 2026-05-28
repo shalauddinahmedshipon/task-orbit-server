@@ -24,7 +24,6 @@ class QueryBuilder<T> {
     return this;
   }
 
-  
   filter() {
     const queryObj = { ...this.query };
     const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
@@ -77,12 +76,6 @@ class QueryBuilder<T> {
       totalPage,
     };
   }
- 
-  
 }
 
 export default QueryBuilder;
-
-
-
-

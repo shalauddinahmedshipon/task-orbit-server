@@ -15,8 +15,6 @@ router.get(
   TaskControllers.getAllTasks,
 );
 
-
-
 // Create task under a project
 router.post(
   '/project/:projectId',
@@ -32,8 +30,6 @@ router.get(
   TaskControllers.getSingleTask,
 );
 
-
-
 //update task (admin/manager)
 router.patch(
   '/:taskId',
@@ -42,20 +38,15 @@ router.patch(
   TaskControllers.updateTask,
 );
 
-
-
-
-
-
 // Status update (separate endpoint — members use this)
 router.patch(
   '/:taskId/status',
-  auth( USER_ROLE.member),
+  auth(USER_ROLE.member),
   validateRequest(taskValidation.updateTaskStatusValidationSchema),
   TaskControllers.updateTaskStatus,
 );
 
-// Manager review task approval 
+// Manager review task approval
 router.patch(
   '/:taskId/approve',
   auth(USER_ROLE.admin, USER_ROLE.manager),
@@ -70,8 +61,6 @@ router.post(
   upload.single('file'),
   TaskControllers.addAttachment,
 );
-
-
 
 router.delete(
   '/:taskId',

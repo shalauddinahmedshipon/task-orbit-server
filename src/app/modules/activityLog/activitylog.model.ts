@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { TActivityLog } from './activityLog.interface';
+import { TActivityLog } from './activitylog.interface';
 
 const activityLogSchema = new Schema<TActivityLog>(
   {
@@ -12,4 +12,7 @@ const activityLogSchema = new Schema<TActivityLog>(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 
-export const ActivityLog = model<TActivityLog>('ActivityLog', activityLogSchema);
+export const ActivityLog = model<TActivityLog>(
+  'ActivityLog',
+  activityLogSchema,
+);

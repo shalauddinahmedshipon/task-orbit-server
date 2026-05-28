@@ -12,7 +12,7 @@ const loginUser = catchAsync(async (req, res) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: config.node_env === 'production',
-    sameSite: 'lax',
+    sameSite: 'none',
   });
 
   sendResponse(res, {
@@ -36,23 +36,19 @@ const logoutUser = catchAsync(async (req, res) => {
 });
 
 const getMe = catchAsync(async (req, res) => {
-   const user = await authServices.getMe(req.user.email);
-  
+  const user = await authServices.getMe(req.user.email);
 
-   sendResponse(res, {
-      statusCode: StatusCodes.OK,
-      message: 'User retrieved successfully',
-      data: user
-   })
-})
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'User retrieved successfully',
+    data: user,
+  });
+});
 
 const changePassword = catchAsync(async (req, res) => {
   const userData = req.user;
 
-  const result = await authServices.changePasswordIntoDB(
-    userData,
-    req.body,
-  );
+  const result = await authServices.changePasswordIntoDB(userData, req.body);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -65,5 +61,5 @@ export const authControllers = {
   loginUser,
   logoutUser,
   getMe,
-  changePassword
+  changePassword,
 };

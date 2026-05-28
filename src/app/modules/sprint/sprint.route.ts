@@ -5,7 +5,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { sprintValidation } from './sprint.validation';
 import { SprintControllers } from './sprint.controller';
 
-const router = Router(); 
+const router = Router();
 
 router.post(
   '/',
