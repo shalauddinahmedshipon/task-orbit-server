@@ -26,7 +26,11 @@ const loginUser = catchAsync(async (req, res) => {
 });
 
 const logoutUser = catchAsync(async (req, res) => {
-  res.clearCookie('accessToken');
+  res.clearCookie('accessToken', {
+  httpOnly: true,
+  secure: config.node_env === 'production',
+  sameSite: 'none',
+});
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
